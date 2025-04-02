@@ -1,0 +1,724 @@
+/* Futuristic Theme for Healthcare Management System */
+:root {
+  --primary-color: #1a1f3e;
+  --primary-light: #2c3470;
+  --accent-color: #70e0ff;
+  --accent-secondary: #ff7070;
+  --text-color: #e6e7ff;
+  --background-color: #f0f5ff;
+  --card-bg: #ffffff;
+  --card-shadow: 0 8px 20px rgba(0, 0, 0, 0.08);
+  --card-hover-shadow: 0 12px 28px rgba(0, 0, 0, 0.15);
+  --border-radius: 12px;
+  --transition-speed: 0.3s;
+}
+
+body {
+  background-color: var(--background-color);
+  color: #333;
+  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+}
+
+.app-container {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+}
+
+main.container {
+  margin-top: 2rem;
+  margin-bottom: 3rem;
+  padding: 0 1rem;
+}
+
+/* Card Styling */
+.patient-card {
+  background: var(--card-bg);
+  border: none;
+  border-radius: var(--border-radius);
+  box-shadow: var(--card-shadow);
+  transition: all var(--transition-speed) ease;
+  margin-bottom: 1.5rem;
+  overflow: hidden;
+  position: relative;
+}
+
+.patient-card::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 5px;
+  background: linear-gradient(90deg, var(--accent-color), var(--primary-light));
+  transform: scaleX(0);
+  transform-origin: left;
+  transition: transform var(--transition-speed) ease;
+}
+
+.patient-card:hover {
+  transform: translateY(-8px);
+  box-shadow: var(--card-hover-shadow);
+}
+
+.patient-card:hover::before {
+  transform: scaleX(1);
+}
+
+.card-title {
+  font-weight: 600;
+  color: var(--primary-color);
+}
+
+/* Button Styling */
+.btn {
+  border-radius: 8px;
+  transition: all 0.25s ease;
+  border: none;
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+  position: relative;
+  overflow: hidden;
+  font-weight: 500;
+}
+
+.btn::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 100%;
+  height: 100%;
+  background: rgba(255, 255, 255, 0.2);
+  transition: transform 0.5s ease;
+  z-index: 0;
+}
+
+.btn:hover::before {
+  transform: translateX(100%);
+}
+
+.btn-primary {
+  background: linear-gradient(135deg, var(--primary-color), var(--primary-light));
+  color: white;
+}
+
+.btn-success {
+  background: linear-gradient(135deg, #20B2AA, #3CB371);
+}
+
+.btn-warning {
+  background: linear-gradient(135deg, #FFA500, #FF8C00);
+}
+
+.btn-danger {
+  background: linear-gradient(135deg, #FF6B6B, #FF4500);
+}
+
+.btn:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 5px 10px rgba(0, 0, 0, 0.15);
+}
+
+.btn:active {
+  transform: translateY(0);
+}
+
+/* Form styling */
+.form-container {
+  max-width: 800px;
+  margin: 0 auto;
+  background: var(--card-bg);
+  border-radius: var(--border-radius);
+  box-shadow: var(--card-shadow);
+  padding: 2rem;
+}
+
+.form-control, .form-select {
+  border: 1px solid #e1e5eb;
+  border-radius: 8px;
+  padding: 0.75rem;
+  transition: all 0.25s ease;
+}
+
+.form-control:focus, .form-select:focus {
+  border-color: var(--accent-color);
+  box-shadow: 0 0 0 3px rgba(112, 224, 255, 0.2);
+}
+
+.form-label {
+  font-weight: 500;
+  color: #4a5568;
+  margin-bottom: 0.5rem;
+}
+
+/* Form futuristic styling */
+.form-container {
+  max-width: 1000px;
+  margin: 0 auto;
+}
+
+.form-header {
+  margin-bottom: 1.5rem;
+}
+
+.form-subtitle {
+  color: var(--text-muted);
+  font-size: 0.95rem;
+  margin-top: 0.5rem;
+}
+
+.current-step-label {
+  font-weight: 500;
+}
+
+.step-title {
+  color: var(--accent-color);
+}
+
+.form-card {
+  background: var(--card-background);
+  border-radius: 10px;
+  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.12);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  overflow: hidden;
+  transition: all 0.3s ease;
+}
+
+.form-card:hover {
+  box-shadow: 0 12px 30px rgba(0, 0, 0, 0.15);
+  transform: translateY(-5px);
+}
+
+/* Step indicator styles */
+.step-indicator {
+  position: relative;
+  padding: 5px 0;
+}
+
+.step-labels {
+  font-size: 0.9rem;
+}
+
+.step-label {
+  color: var(--text-muted);
+  transition: color 0.3s ease;
+  position: relative;
+  z-index: 1;
+}
+
+.step-label.active {
+  color: var(--accent-color);
+  font-weight: 500;
+}
+
+.custom-progress {
+  height: 6px;
+  border-radius: 3px;
+  background-color: rgba(0, 0, 0, 0.1);
+  box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.1);
+}
+
+.progress-bar {
+  background: linear-gradient(135deg, var(--accent-color), var(--accent-light));
+  box-shadow: 0 0 10px rgba(56, 189, 248, 0.5);
+  transition: width 0.5s ease-in-out;
+}
+
+/* Form step transitions */
+.form-step {
+  animation: fadeIn 0.5s ease-in-out;
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* Floating label inputs */
+.floating-group {
+  position: relative;
+}
+
+.floating-input {
+  height: 56px;
+  border-radius: 8px;
+  padding: 1.5rem 1rem 0.5rem;
+  font-size: 1rem;
+  background-color: var(--input-background);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  transition: all 0.3s ease;
+}
+
+.textarea-input {
+  height: auto;
+  padding-top: 2rem;
+}
+
+.floating-input:focus {
+  box-shadow: 0 0 0 2px rgba(56, 189, 248, 0.25);
+  border-color: var(--accent-color);
+}
+
+.floating-label {
+  position: absolute;
+  top: 50%;
+  left: 1rem;
+  transform: translateY(-50%);
+  font-size: 1rem;
+  color: var(--text-muted);
+  pointer-events: none;
+  transition: all 0.3s ease;
+}
+
+.floating-input:focus ~ .floating-label,
+.floating-input:not(:placeholder-shown) ~ .floating-label {
+  top: 0.7rem;
+  left: 1rem;
+  font-size: 0.75rem;
+  color: var(--accent-color);
+}
+
+.textarea-input ~ .floating-label {
+  top: 1.4rem;
+}
+
+.textarea-input:focus ~ .floating-label,
+.textarea-input:not(:placeholder-shown) ~ .floating-label {
+  top: 0.7rem;
+}
+
+/* Custom select styling */
+.custom-select {
+  height: 56px;
+  border-radius: 8px;
+  padding: 0 1rem;
+  font-size: 1rem;
+  background-color: var(--input-background);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  transition: all 0.3s ease;
+  cursor: pointer;
+  background-image: linear-gradient(45deg, transparent 50%, var(--text-color) 50%),
+                    linear-gradient(135deg, var(--text-color) 50%, transparent 50%);
+  background-position: calc(100% - 20px) calc(1.2em + 2px),
+                       calc(100% - 15px) calc(1.2em + 2px);
+  background-size: 5px 5px, 5px 5px;
+  background-repeat: no-repeat;
+  -webkit-appearance: none;
+  -moz-appearance: none;
+  appearance: none;
+}
+
+.custom-select:focus {
+  box-shadow: 0 0 0 2px rgba(56, 189, 248, 0.25);
+  border-color: var(--accent-color);
+}
+
+.select-label {
+  margin-bottom: 0.5rem;
+  font-size: 0.9rem;
+}
+
+/* Profile image styling */
+.profile-image-preview {
+  width: 150px;
+  height: 150px;
+  margin: 0 auto;
+  position: relative;
+  overflow: hidden;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.05);
+  border: 3px solid rgba(255, 255, 255, 0.1);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.profile-img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.profile-placeholder {
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(135deg, var(--primary-color), #2d3748);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.profile-placeholder span {
+  font-size: 2.5rem;
+  color: rgba(255, 255, 255, 0.5);
+}
+
+/* File upload styling */
+.file-upload-wrapper {
+  position: relative;
+  text-align: center;
+  margin-top: 1rem;
+}
+
+.custom-file-input {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  opacity: 0;
+  cursor: pointer;
+  z-index: 1;
+}
+
+.upload-btn {
+  position: relative;
+  display: inline-block;
+  z-index: 0;
+  width: 100%;
+  padding: 0.5rem 1rem;
+  border-radius: 8px;
+  transition: all 0.3s ease;
+  border-color: rgba(255, 255, 255, 0.2);
+}
+
+.upload-btn:hover {
+  background-color: var(--accent-color);
+  border-color: var(--accent-color);
+  color: white;
+}
+
+/* Form navigation */
+.form-navigation {
+  margin-top: 2rem;
+}
+
+.navigation-btn {
+  position: relative;
+  display: flex;
+  align-items: center;
+  padding: 0.75rem 1.25rem;
+  border-radius: 8px;
+  font-weight: 500;
+  transition: all 0.3s ease;
+  overflow: hidden;
+}
+
+.navigation-btn::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(135deg, rgba(255, 255, 255, 0.1), rgba(255, 255, 255, 0));
+  opacity: 0;
+  transition: opacity 0.3s ease;
+}
+
+.navigation-btn:hover::before {
+  opacity: 1;
+}
+
+.next-btn, .submit-btn {
+  background: linear-gradient(135deg, var(--primary-color), var(--primary-light));
+  border: none;
+  color: white;
+}
+
+.next-btn:hover, .submit-btn:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+}
+
+.prev-btn, .cancel-btn {
+  border-color: rgba(255, 255, 255, 0.2);
+}
+
+.prev-btn:hover, .cancel-btn:hover {
+  border-color: rgba(255, 255, 255, 0.3);
+}
+
+.btn-icon {
+  margin: 0 0.4rem;
+}
+
+/* Submit button saving animation */
+.submit-btn.saving {
+  position: relative;
+  overflow: hidden;
+}
+
+.submit-btn.saving::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 30px;
+  height: 100%;
+  background: linear-gradient(
+    90deg,
+    rgba(255, 255, 255, 0) 0%,
+    rgba(255, 255, 255, 0.4) 50%,
+    rgba(255, 255, 255, 0) 100%
+  );
+  animation: shimmer 1.5s infinite;
+}
+
+@keyframes shimmer {
+  from {
+    transform: translateX(-100%);
+  }
+  to {
+    transform: translateX(500%);
+  }
+}
+
+.saving-dots span {
+  opacity: 0;
+  animation: dot 1.5s infinite;
+  animation-fill-mode: forwards;
+}
+
+.saving-dots span:nth-child(2) {
+  animation-delay: 0.3s;
+}
+
+.saving-dots span:nth-child(3) {
+  animation-delay: 0.6s;
+}
+
+@keyframes dot {
+  0% {
+    opacity: 0;
+  }
+  50% {
+    opacity: 1;
+  }
+  100% {
+    opacity: 0;
+  }
+}
+
+/* Page titles and headers */
+h1, h2, h3, h4, h5, h6 {
+  color: var(--primary-color);
+  font-weight: 600;
+}
+
+h2 {
+  position: relative;
+  padding-bottom: 0.5rem;
+  margin-bottom: 1.5rem;
+}
+
+h2::after {
+  content: '';
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  width: 60px;
+  height: 3px;
+  background: linear-gradient(90deg, var(--accent-color), var(--primary-light));
+}
+
+/* Alerts */
+.alert {
+  border: none;
+  border-radius: var(--border-radius);
+  padding: 1rem;
+  position: relative;
+  overflow: hidden;
+}
+
+.alert::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  top: 0;
+  height: 100%;
+  width: 5px;
+}
+
+.alert-info {
+  background-color: rgba(112, 224, 255, 0.1);
+  color: #2a7aaf;
+}
+
+.alert-info::before {
+  background-color: var(--accent-color);
+}
+
+.alert-danger {
+  background-color: rgba(255, 112, 112, 0.1);
+  color: #c53030;
+}
+
+.alert-danger::before {
+  background-color: var(--accent-secondary);
+}
+
+/* Patient detail styling */
+.detail-container {
+  background-color: var(--card-bg);
+  border-radius: var(--border-radius);
+  padding: 2rem;
+  box-shadow: var(--card-shadow);
+}
+
+.detail-header {
+  border-bottom: 1px solid #e1e5eb;
+  padding-bottom: 1.5rem;
+  margin-bottom: 1.5rem;
+}
+
+.detail-section {
+  margin-bottom: 2rem;
+}
+
+.detail-actions {
+  margin-top: 2rem;
+  display: flex;
+  gap: 1rem;
+}
+
+/* Patient avatar styling */
+.patient-avatar {
+  display: flex;
+  justify-content: center;
+}
+
+.avatar-placeholder {
+  width: 50px;
+  height: 50px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, var(--primary-color), var(--primary-light));
+  color: white;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: bold;
+  font-size: 1rem;
+  box-shadow: 0 3px 8px rgba(0, 0, 0, 0.15);
+  border: 2px solid rgba(255, 255, 255, 0.2);
+}
+
+/* Additional interactive elements */
+.hoverable-toolbar {
+  display: flex;
+  align-items: center;
+  background: var(--card-bg);
+  border-radius: 12px;
+  padding: 0.5rem;
+  box-shadow: var(--card-shadow);
+  margin-bottom: 1.5rem;
+  overflow: hidden;
+  transition: all var(--transition-speed) ease;
+}
+
+.hoverable-toolbar:hover {
+  box-shadow: var(--card-hover-shadow);
+  transform: translateY(-3px);
+}
+
+.tool-item {
+  padding: 0.5rem 1rem;
+  border-radius: 8px;
+  transition: all 0.2s ease;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  color: var(--primary-color);
+}
+
+.tool-item:hover {
+  background-color: rgba(112, 224, 255, 0.1);
+  color: var(--accent-color);
+}
+
+.tool-item.active {
+  background-color: rgba(112, 224, 255, 0.2);
+  color: var(--accent-color);
+  font-weight: 500;
+}
+
+.tool-icon {
+  font-size: 1.2rem;
+}
+
+/* Animation for page transitions */
+.fade-enter {
+  opacity: 0;
+  transform: translateY(10px);
+}
+
+.fade-enter-active {
+  opacity: 1;
+  transform: translateY(0px);
+  transition: opacity 300ms, transform 300ms;
+}
+
+.fade-exit {
+  opacity: 1;
+  transform: translateY(0px);
+}
+
+.fade-exit-active {
+  opacity: 0;
+  transform: translateY(-10px);
+  transition: opacity 300ms, transform 300ms;
+}
+
+/* Responsive adjustments */
+@media (max-width: 992px) {
+  .form-container {
+    padding: 1.5rem;
+  }
+  
+  main.container {
+    margin-top: 1rem;
+  }
+}
+
+@media (max-width: 768px) {
+  .detail-actions {
+    flex-direction: column;
+  }
+  
+  .btn {
+    width: 100%;
+  }
+}
+
+/* Loading indicator */
+.loading-spinner {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  height: 100px;
+}
+
+.spinner {
+  border: 4px solid rgba(0, 0, 0, 0.1);
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  border-left-color: var(--accent-color);
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  0% {
+    transform: rotate(0deg);
+  }
+  100% {
+    transform: rotate(360deg);
+  }
+}

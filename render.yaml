@@ -1,0 +1,42 @@
+services:
+  # Patient Service (Python/Flask)
+  - type: web
+    name: hms-patient-service
+    env: python
+    buildCommand: cd backend/patient-service && pip install -r requirements.txt
+    startCommand: cd backend/patient-service && python app.py
+    envVars:
+      - key: FLASK_ENV
+        value: production
+      - key: PORT
+        value: 8080
+
+  # API Gateway (Node.js)
+  - type: web
+    name: hms-api-gateway
+    env: node
+    buildCommand: cd backend/api-gateway && npm install
+    startCommand: cd backend/api-gateway && npm start
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: PORT
+        value: 3000
+      - key: PATIENT_SERVICE_URL
+        fromService:
+          name: hms-patient-service
+          type: web
+          property: url
+
+  # Frontend (React)
+  - type: web
+    name: hms-frontend
+    env: static
+    buildCommand: cd frontend && npm install && npm run build
+    staticPublishPath: frontend/build
+    envVars:
+      - key: REACT_APP_API_GATEWAY_URL
+        fromService:
+          name: hms-api-gateway
+          type: web
+          property: url

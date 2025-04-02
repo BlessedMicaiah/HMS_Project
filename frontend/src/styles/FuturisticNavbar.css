@@ -1,0 +1,247 @@
+/* Futuristic Navbar Styles */
+.futuristic-navbar {
+  background: linear-gradient(90deg, #1a1f3e 0%, #2c3470 100%);
+  color: white;
+  padding: 0.5rem 0;
+  position: sticky;
+  top: 0;
+  z-index: 1000;
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+  transition: all 0.3s ease;
+}
+
+.navbar-container {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+}
+
+/* Brand styling */
+.navbar-brand-container {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  width: 100%;
+}
+
+.navbar-brand {
+  display: flex;
+  align-items: center;
+  color: white;
+  text-decoration: none;
+  font-weight: 700;
+  letter-spacing: 0.5px;
+  transition: all 0.3s ease;
+  padding: 0.5rem 0;
+}
+
+.navbar-brand:hover {
+  color: #70e0ff;
+  transform: scale(1.02);
+}
+
+.brand-icon {
+  font-size: 1.5rem;
+  margin-right: 8px;
+  background: rgba(255, 255, 255, 0.2);
+  padding: 5px;
+  border-radius: 50%;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 35px;
+  height: 35px;
+}
+
+.brand-text {
+  font-size: 1.4rem;
+}
+
+.brand-suffix {
+  font-size: 0.8rem;
+  background: #70e0ff;
+  color: #1a1f3e;
+  padding: 2px 6px;
+  border-radius: 4px;
+  margin-left: 5px;
+  font-weight: 800;
+}
+
+/* Navigation items */
+.navbar-links {
+  display: flex;
+  width: 100%;
+  margin-top: 1rem;
+  max-height: 0;
+  overflow: hidden;
+  transition: max-height 0.3s ease;
+}
+
+.navbar-links.show {
+  max-height: 300px;
+}
+
+.nav-item-container {
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+}
+
+.nav-item {
+  display: flex;
+  align-items: center;
+  color: white;
+  text-decoration: none;
+  padding: 0.8rem 1rem;
+  margin: 2px 0;
+  border-radius: 8px;
+  transition: all 0.2s ease;
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  text-align: left;
+  font-size: 1rem;
+}
+
+.nav-item:hover, .nav-item.active {
+  background: rgba(255, 255, 255, 0.1);
+  color: #70e0ff;
+  transform: translateX(5px);
+}
+
+.nav-icon {
+  margin-right: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.2rem;
+  width: 30px;
+  height: 30px;
+  background: rgba(255, 255, 255, 0.1);
+  border-radius: 8px;
+  transition: all 0.3s ease;
+}
+
+.nav-item:hover .nav-icon, 
+.nav-item.active .nav-icon {
+  background: rgba(255, 255, 255, 0.2);
+  transform: scale(1.1);
+}
+
+.logout-button {
+  margin-top: auto;
+  color: #ff7070;
+}
+
+.logout-button:hover {
+  background: rgba(255, 120, 120, 0.1);
+}
+
+/* User profile */
+.user-profile {
+  display: flex;
+  align-items: center;
+  padding: 0.5rem 0;
+  margin-top: 1rem;
+  border-top: 1px solid rgba(255, 255, 255, 0.1);
+  width: 100%;
+}
+
+.user-avatar {
+  width: 35px;
+  height: 35px;
+  border-radius: 50%;
+  background: #70e0ff;
+  color: #1a1f3e;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: bold;
+  margin-right: 10px;
+}
+
+.user-info {
+  display: flex;
+  flex-direction: column;
+}
+
+.user-name {
+  font-weight: 600;
+  font-size: 0.9rem;
+}
+
+.user-role {
+  font-size: 0.75rem;
+  opacity: 0.7;
+}
+
+/* Mobile toggle button */
+.mobile-toggle {
+  background: transparent;
+  border: none;
+  color: white;
+  font-size: 1.5rem;
+  cursor: pointer;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+  padding: 5px;
+}
+
+.hamburger-line {
+  width: 24px;
+  height: 2px;
+  background-color: white;
+  display: block;
+  transition: all 0.3s ease;
+}
+
+/* Media queries for responsive design */
+@media (min-width: 992px) {
+  .navbar-brand-container {
+    width: auto;
+  }
+  
+  .mobile-toggle {
+    display: none;
+  }
+  
+  .navbar-links {
+    max-height: none;
+    width: auto;
+    margin-top: 0;
+    margin-left: 2rem;
+  }
+  
+  .nav-item-container {
+    flex-direction: row;
+    align-items: center;
+    gap: 10px;
+    width: auto;
+  }
+  
+  .nav-item {
+    margin: 0;
+    padding: 0.5rem 1rem;
+  }
+  
+  .nav-item:hover, .nav-item.active {
+    transform: translateY(-3px);
+  }
+  
+  .user-profile {
+    width: auto;
+    margin-top: 0;
+    margin-left: auto;
+    border-top: none;
+    padding: 0 0 0 1.5rem;
+    border-left: 1px solid rgba(255, 255, 255, 0.1);
+  }
+  
+  .logout-button {
+    margin-top: 0;
+  }
+}
