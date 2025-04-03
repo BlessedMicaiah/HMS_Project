@@ -16,9 +16,9 @@ const PatientList = () => {
   const fetchPatients = useCallback(async () => {
     try {
       setLoading(true);
-      const data = await getPatients();
-      setPatients(data);
-      setFilteredPatients(data);
+      const response = await getPatients();
+      setPatients(response.data);
+      setFilteredPatients(response.data);
       setError(null);
     } catch (err) {
       setError('Failed to fetch patients');

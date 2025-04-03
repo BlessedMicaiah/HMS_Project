@@ -9,6 +9,7 @@ import boto3
 from werkzeug.utils import secure_filename
 import base64
 import json
+import math
 
 # Initialize Flask app
 app = Flask(__name__)
@@ -126,7 +127,7 @@ class Patient(db.Model):
     email = db.Column(db.String(100), nullable=False, unique=True)
     phone = db.Column(db.String(20), nullable=False)
     address = db.Column(db.String(200), nullable=False)
-    insuranceId = db.Column(db.String(50), nullable=False)
+    insuranceId = db.Column(db.String(50), nullable=True)
     medicalConditions = db.Column(MedicalConditionList, default=list)
     allergies = db.Column(AllergiesList, default=list)
     notes = db.Column(db.Text, nullable=True)
@@ -174,6 +175,99 @@ class MedicalImage(db.Model):
             'description': self.description,
             'uploadedAt': self.uploadedAt.isoformat(),
             'uploadedBy': self.uploadedBy
+        }
+
+# Define Appointment model
+class Appointment(db.Model):
+    __tablename__ = 'appointments'
+    
+    id = db.Column(db.String(36), primary_key=True, default=lambda: str(uuid.uuid4()))
+    patientId = db.Column(db.String(36), db.ForeignKey('patients.id'), nullable=False)
+    doctorId = db.Column(db.String(36), db.ForeignKey('users.id'), nullable=False)
+    appointmentDate = db.Column(db.String(10), nullable=False)  # Format: YYYY-MM-DD
+    startTime = db.Column(db.String(8), nullable=False)  # Format: HH:MM:SS
+    endTime = db.Column(db.String(8), nullable=False)  # Format: HH:MM:SS
+    status = db.Column(db.String(20), nullable=False)  # Scheduled, Completed, Canceled, No-Show
+    reason = db.Column(db.String(200), nullable=False)
+    notes = db.Column(db.Text, nullable=True)
+    createdAt = db.Column(db.DateTime, default=datetime.utcnow)
+    updatedAt = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+    
+    def to_dict(self):
+        return {
+            'id': self.id,
+            'patientId': self.patientId,
+            'doctorId': self.doctorId,
+            'appointmentDate': self.appointmentDate,
+            'startTime': self.startTime,
+            'endTime': self.endTime,
+            'status': self.status,
+            'reason': self.reason,
+            'notes': self.notes,
+            'createdAt': self.createdAt.isoformat(),
+            'updatedAt': self.updatedAt.isoformat()
+        }
+
+# Define Medication model
+class Medication(db.Model):
+    __tablename__ = 'medications'
+    
+    id = db.Column(db.String(36), primary_key=True, default=lambda: str(uuid.uuid4()))
+    patientId = db.Column(db.String(36), db.ForeignKey('patients.id'), nullable=False)
+    name = db.Column(db.String(100), nullable=False)
+    dosage = db.Column(db.String(50), nullable=False)
+    frequency = db.Column(db.String(100), nullable=False)
+    startDate = db.Column(db.String(10), nullable=False)  # Format: YYYY-MM-DD
+    endDate = db.Column(db.String(10), nullable=True)  # Format: YYYY-MM-DD
+    prescribedBy = db.Column(db.String(36), db.ForeignKey('users.id'), nullable=False)
+    notes = db.Column(db.Text, nullable=True)
+    createdAt = db.Column(db.DateTime, default=datetime.utcnow)
+    updatedAt = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+    
+    def to_dict(self):
+        return {
+            'id': self.id,
+            'patientId': self.patientId,
+            'name': self.name,
+            'dosage': self.dosage,
+            'frequency': self.frequency,
+            'startDate': self.startDate,
+            'endDate': self.endDate,
+            'prescribedBy': self.prescribedBy,
+            'notes': self.notes,
+            'createdAt': self.createdAt.isoformat(),
+            'updatedAt': self.updatedAt.isoformat()
+        }
+
+# Define Medical Record model
+class MedicalRecord(db.Model):
+    __tablename__ = 'medical_records'
+    
+    id = db.Column(db.String(36), primary_key=True, default=lambda: str(uuid.uuid4()))
+    patientId = db.Column(db.String(36), db.ForeignKey('patients.id'), nullable=False)
+    doctorId = db.Column(db.String(36), db.ForeignKey('users.id'), nullable=False)
+    visitDate = db.Column(db.String(10), nullable=False)  # Format: YYYY-MM-DD
+    chiefComplaint = db.Column(db.String(200), nullable=False)
+    diagnosis = db.Column(db.Text, nullable=False)
+    treatmentPlan = db.Column(db.Text, nullable=False)
+    followUpNeeded = db.Column(db.Boolean, default=False)
+    notes = db.Column(db.Text, nullable=True)
+    createdAt = db.Column(db.DateTime, default=datetime.utcnow)
+    updatedAt = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+    
+    def to_dict(self):
+        return {
+            'id': self.id,
+            'patientId': self.patientId,
+            'doctorId': self.doctorId,
+            'visitDate': self.visitDate,
+            'chiefComplaint': self.chiefComplaint,
+            'diagnosis': self.diagnosis,
+            'treatmentPlan': self.treatmentPlan,
+            'followUpNeeded': self.followUpNeeded,
+            'notes': self.notes,
+            'createdAt': self.createdAt.isoformat(),
+            'updatedAt': self.updatedAt.isoformat()
         }
 
 # Helper function to check user authorization
@@ -255,8 +349,40 @@ def upload_base64_to_s3(base64_data, folder='patient-profiles'):
 @app.route('/api/patients', methods=['GET'])
 @authorize('read')
 def get_all_patients():
-    patients = Patient.query.all()
-    return jsonify([patient.to_dict() for patient in patients])
+    # Get pagination parameters from query string
+    page = request.args.get('page', 1, type=int)
+    per_page = request.args.get('per_page', 10, type=int)
+    
+    # Limit maximum per_page to 100 to prevent excessive loads
+    per_page = min(per_page, 100)
+    
+    # Get total count for pagination metadata
+    total_patients = Patient.query.count()
+    
+    # Get paginated patients
+    patients = Patient.query.order_by(Patient.lastName.asc(), Patient.firstName.asc())
+    
+    # Filter by user if not admin
+    if request.user and request.user.role != 'ADMIN':
+        patients = patients.filter_by(createdBy=request.user.id)
+    
+    # Apply pagination
+    patients = patients.paginate(page=page, per_page=per_page, error_out=False)
+    
+    # Prepare response
+    response = {
+        'data': [patient.to_dict() for patient in patients.items],
+        'pagination': {
+            'total': total_patients,
+            'per_page': per_page,
+            'current_page': page,
+            'total_pages': math.ceil(total_patients / per_page),
+            'has_next': patients.has_next,
+            'has_prev': patients.has_prev
+        }
+    }
+    
+    return jsonify(response)
 
 @app.route('/api/patients/<string:id>', methods=['GET'])
 @authorize('read')
@@ -398,8 +524,360 @@ def get_patient_images(patient_id):
     if request.user.role == 'PATIENT' and request.user.id != patient.createdBy:
         return jsonify({'message': 'Forbidden - You can only view your own records'}), 403
     
-    images = MedicalImage.query.filter_by(patientId=patient_id).all()
-    return jsonify([image.to_dict() for image in images])
+    # Get pagination parameters from query string
+    page = request.args.get('page', 1, type=int)
+    per_page = request.args.get('per_page', 10, type=int)
+    
+    # Limit maximum per_page to 100 to prevent excessive loads
+    per_page = min(per_page, 100)
+    
+    # Get total count for pagination metadata
+    total_images = MedicalImage.query.filter_by(patientId=patient_id).count()
+    
+    # Get paginated images, ordered by most recent first
+    images = MedicalImage.query.filter_by(patientId=patient_id).order_by(MedicalImage.uploadedAt.desc())
+    images = images.paginate(page=page, per_page=per_page, error_out=False)
+    
+    # Prepare response
+    response = {
+        'data': [image.to_dict() for image in images.items],
+        'pagination': {
+            'total': total_images,
+            'per_page': per_page,
+            'current_page': page,
+            'total_pages': math.ceil(total_images / per_page) if total_images > 0 else 1,
+            'has_next': images.has_next,
+            'has_prev': images.has_prev
+        }
+    }
+    
+    return jsonify(response)
+
+@app.route('/api/appointments', methods=['POST'])
+@authorize('write')
+def create_appointment():
+    data = request.get_json()
+    
+    new_appointment = Appointment(
+        patientId=data.get('patientId'),
+        doctorId=data.get('doctorId'),
+        appointmentDate=data.get('appointmentDate'),
+        startTime=data.get('startTime'),
+        endTime=data.get('endTime'),
+        status=data.get('status'),
+        reason=data.get('reason'),
+        notes=data.get('notes', '')
+    )
+    
+    db.session.add(new_appointment)
+    db.session.commit()
+    
+    return jsonify(new_appointment.to_dict()), 201
+
+@app.route('/api/appointments', methods=['GET'])
+@authorize('read')
+def get_all_appointments():
+    # Get pagination parameters from query string
+    page = request.args.get('page', 1, type=int)
+    per_page = request.args.get('per_page', 10, type=int)
+    
+    # Limit maximum per_page to 100 to prevent excessive loads
+    per_page = min(per_page, 100)
+    
+    # Optional date filter
+    date_filter = request.args.get('date')
+    
+    # Build query
+    query = Appointment.query
+    
+    # Apply date filter if provided
+    if date_filter:
+        query = query.filter(Appointment.appointmentDate == date_filter)
+    
+    # Filter by doctor if user is not admin
+    if request.user and request.user.role != 'ADMIN':
+        query = query.filter(Appointment.doctorId == request.user.id)
+    
+    # Get total count for pagination metadata
+    total_appointments = query.count()
+    
+    # Order by date and time
+    query = query.order_by(Appointment.appointmentDate.asc(), Appointment.startTime.asc())
+    
+    # Apply pagination
+    appointments = query.paginate(page=page, per_page=per_page, error_out=False)
+    
+    # Prepare response
+    response = {
+        'data': [appointment.to_dict() for appointment in appointments.items],
+        'pagination': {
+            'total': total_appointments,
+            'per_page': per_page,
+            'current_page': page,
+            'total_pages': math.ceil(total_appointments / per_page) if total_appointments > 0 else 1,
+            'has_next': appointments.has_next,
+            'has_prev': appointments.has_prev
+        }
+    }
+    
+    return jsonify(response)
+
+@app.route('/api/appointments/<string:id>', methods=['GET'])
+@authorize('read')
+def get_appointment(id):
+    appointment = Appointment.query.get(id)
+    if not appointment:
+        return jsonify({'message': 'Appointment not found'}), 404
+    
+    return jsonify(appointment.to_dict())
+
+@app.route('/api/appointments/<string:id>', methods=['PUT'])
+@authorize('write')
+def update_appointment(id):
+    appointment = Appointment.query.get(id)
+    if not appointment:
+        return jsonify({'message': 'Appointment not found'}), 404
+    
+    data = request.get_json()
+    
+    # Update appointment attributes
+    for key, value in data.items():
+        if hasattr(appointment, key):
+            setattr(appointment, key, value)
+    
+    db.session.commit()
+    
+    return jsonify(appointment.to_dict())
+
+@app.route('/api/appointments/<string:id>', methods=['DELETE'])
+@authorize('delete')
+def delete_appointment(id):
+    appointment = Appointment.query.get(id)
+    if not appointment:
+        return jsonify({'message': 'Appointment not found'}), 404
+    
+    db.session.delete(appointment)
+    db.session.commit()
+    
+    return '', 204
+
+@app.route('/api/medications', methods=['POST'])
+@authorize('write')
+def create_medication():
+    data = request.get_json()
+    
+    new_medication = Medication(
+        patientId=data.get('patientId'),
+        name=data.get('name'),
+        dosage=data.get('dosage'),
+        frequency=data.get('frequency'),
+        startDate=data.get('startDate'),
+        endDate=data.get('endDate'),
+        prescribedBy=data.get('prescribedBy'),
+        notes=data.get('notes', '')
+    )
+    
+    db.session.add(new_medication)
+    db.session.commit()
+    
+    return jsonify(new_medication.to_dict()), 201
+
+@app.route('/api/medications', methods=['GET'])
+@authorize('read')
+def get_all_medications():
+    # Get pagination parameters from query string
+    page = request.args.get('page', 1, type=int)
+    per_page = request.args.get('per_page', 10, type=int)
+    
+    # Limit maximum per_page to 100 to prevent excessive loads
+    per_page = min(per_page, 100)
+    
+    # Optional patient filter
+    patient_id = request.args.get('patient_id')
+    
+    # Build query
+    query = Medication.query
+    
+    # Apply patient filter if provided
+    if patient_id:
+        query = query.filter(Medication.patientId == patient_id)
+    
+    # Filter by user role
+    if request.user and request.user.role != 'ADMIN':
+        # For doctors, only show medications they prescribed
+        query = query.filter(Medication.prescribedBy == request.user.id)
+    
+    # Get total count for pagination metadata
+    total_medications = query.count()
+    
+    # Order by start date descending (newest first)
+    query = query.order_by(Medication.startDate.desc())
+    
+    # Apply pagination
+    medications = query.paginate(page=page, per_page=per_page, error_out=False)
+    
+    # Prepare response
+    response = {
+        'data': [medication.to_dict() for medication in medications.items],
+        'pagination': {
+            'total': total_medications,
+            'per_page': per_page,
+            'current_page': page,
+            'total_pages': math.ceil(total_medications / per_page) if total_medications > 0 else 1,
+            'has_next': medications.has_next,
+            'has_prev': medications.has_prev
+        }
+    }
+    
+    return jsonify(response)
+
+@app.route('/api/medications/<string:id>', methods=['GET'])
+@authorize('read')
+def get_medication(id):
+    medication = Medication.query.get(id)
+    if not medication:
+        return jsonify({'message': 'Medication not found'}), 404
+    
+    return jsonify(medication.to_dict())
+
+@app.route('/api/medications/<string:id>', methods=['PUT'])
+@authorize('write')
+def update_medication(id):
+    medication = Medication.query.get(id)
+    if not medication:
+        return jsonify({'message': 'Medication not found'}), 404
+    
+    data = request.get_json()
+    
+    # Update medication attributes
+    for key, value in data.items():
+        if hasattr(medication, key):
+            setattr(medication, key, value)
+    
+    db.session.commit()
+    
+    return jsonify(medication.to_dict())
+
+@app.route('/api/medications/<string:id>', methods=['DELETE'])
+@authorize('delete')
+def delete_medication(id):
+    medication = Medication.query.get(id)
+    if not medication:
+        return jsonify({'message': 'Medication not found'}), 404
+    
+    db.session.delete(medication)
+    db.session.commit()
+    
+    return '', 204
+
+@app.route('/api/medical-records', methods=['POST'])
+@authorize('write')
+def create_medical_record():
+    data = request.get_json()
+    
+    new_record = MedicalRecord(
+        patientId=data.get('patientId'),
+        doctorId=data.get('doctorId'),
+        visitDate=data.get('visitDate'),
+        chiefComplaint=data.get('chiefComplaint'),
+        diagnosis=data.get('diagnosis'),
+        treatmentPlan=data.get('treatmentPlan'),
+        followUpNeeded=data.get('followUpNeeded', False),
+        notes=data.get('notes', '')
+    )
+    
+    db.session.add(new_record)
+    db.session.commit()
+    
+    return jsonify(new_record.to_dict()), 201
+
+@app.route('/api/medical-records', methods=['GET'])
+@authorize('read')
+def get_all_medical_records():
+    # Get pagination parameters from query string
+    page = request.args.get('page', 1, type=int)
+    per_page = request.args.get('per_page', 10, type=int)
+    
+    # Limit maximum per_page to 100 to prevent excessive loads
+    per_page = min(per_page, 100)
+    
+    # Optional patient filter
+    patient_id = request.args.get('patient_id')
+    
+    # Build query
+    query = MedicalRecord.query
+    
+    # Apply patient filter if provided
+    if patient_id:
+        query = query.filter(MedicalRecord.patientId == patient_id)
+    
+    # Filter by user role
+    if request.user and request.user.role != 'ADMIN':
+        # For doctors, only show records they created
+        query = query.filter(MedicalRecord.doctorId == request.user.id)
+    
+    # Get total count for pagination metadata
+    total_records = query.count()
+    
+    # Order by visit date descending (newest first)
+    query = query.order_by(MedicalRecord.visitDate.desc())
+    
+    # Apply pagination
+    records = query.paginate(page=page, per_page=per_page, error_out=False)
+    
+    # Prepare response
+    response = {
+        'data': [record.to_dict() for record in records.items],
+        'pagination': {
+            'total': total_records,
+            'per_page': per_page,
+            'current_page': page,
+            'total_pages': math.ceil(total_records / per_page) if total_records > 0 else 1,
+            'has_next': records.has_next,
+            'has_prev': records.has_prev
+        }
+    }
+    
+    return jsonify(response)
+
+@app.route('/api/medical-records/<string:id>', methods=['GET'])
+@authorize('read')
+def get_medical_record(id):
+    medical_record = MedicalRecord.query.get(id)
+    if not medical_record:
+        return jsonify({'message': 'Medical record not found'}), 404
+    
+    return jsonify(medical_record.to_dict())
+
+@app.route('/api/medical-records/<string:id>', methods=['PUT'])
+@authorize('write')
+def update_medical_record(id):
+    medical_record = MedicalRecord.query.get(id)
+    if not medical_record:
+        return jsonify({'message': 'Medical record not found'}), 404
+    
+    data = request.get_json()
+    
+    # Update medical record attributes
+    for key, value in data.items():
+        if hasattr(medical_record, key):
+            setattr(medical_record, key, value)
+    
+    db.session.commit()
+    
+    return jsonify(medical_record.to_dict())
+
+@app.route('/api/medical-records/<string:id>', methods=['DELETE'])
+@authorize('delete')
+def delete_medical_record(id):
+    medical_record = MedicalRecord.query.get(id)
+    if not medical_record:
+        return jsonify({'message': 'Medical record not found'}), 404
+    
+    db.session.delete(medical_record)
+    db.session.commit()
+    
+    return '', 204
 
 @app.route('/api/auth/login', methods=['POST'])
 def login():
@@ -440,129 +918,264 @@ def health_check():
     }), 200
 
 # For development - seed data
-@app.cli.command("seed-db")
+@app.route('/api/seed', methods=['GET'])
 def seed_db():
-    """Seed the database with initial data."""
-    print("Seeding database with sample users and patients...")
-    
     # Clear existing data
-    db.session.query(MedicalImage).delete()
-    db.session.query(Patient).delete()
-    db.session.query(User).delete()
+    MedicalImage.query.delete()
+    Patient.query.delete()
+    User.query.delete()
+    Appointment.query.delete()
+    Medication.query.delete()
+    MedicalRecord.query.delete()
     
-    # Sample users
-    users = [
-        User(
-            id='1',
-            username='admin',
-            password='admin123',  # In a real app, hash this
-            firstName='Admin',
-            lastName='User',
-            email='admin@example.com',
-            role='ADMIN'
-        ),
-        User(
-            id='2',
-            username='doctor',
-            password='doctor123',  # In a real app, hash this
-            firstName='Doctor',
-            lastName='Smith',
-            email='doctor@example.com',
-            role='DOCTOR'
-        ),
-        User(
-            id='3',
-            username='nurse',
-            password='nurse123',  # In a real app, hash this
-            firstName='Nurse',
-            lastName='Johnson',
-            email='nurse@example.com',
-            role='NURSE'
-        ),
-        User(
-            id='4',
-            username='receptionist',
-            password='reception123',  # In a real app, hash this
-            firstName='Front',
-            lastName='Desk',
-            email='reception@example.com',
-            role='RECEPTIONIST'
-        ),
-        User(
-            id='5',
-            username='patient',
-            password='patient123',  # In a real app, hash this
-            firstName='Patient',
-            lastName='User',
-            email='patient@example.com',
-            role='PATIENT'
-        )
-    ]
+    # Create users for different roles
+    admin = User(
+        username='admin',
+        password='admin123',  # In real app, should be hashed
+        firstName='Admin',
+        lastName='User',
+        email='admin@hospital.com',
+        role='ADMIN'
+    )
     
-    for user in users:
-        db.session.add(user)
+    doctor1 = User(
+        username='doctor1',
+        password='doctor123',  # In real app, should be hashed
+        firstName='John',
+        lastName='Smith',
+        email='john.smith@hospital.com',
+        role='DOCTOR'
+    )
     
-    # Sample patients
-    patients = [
-        Patient(
-            id='1',
-            firstName='John',
-            lastName='Doe',
-            dateOfBirth='1980-05-15',
-            gender='Male',
-            email='john.doe@example.com',
-            phone='(555) 123-4567',
-            address='123 Main St, Anytown, USA',
-            insuranceId='INS-12345',
-            medicalConditions=['Hypertension', 'Asthma'],
-            allergies=['Penicillin'],
-            notes='Patient prefers morning appointments',
-            createdBy='2'  # Doctor created this record
-        ),
-        Patient(
-            id='2',
-            firstName='Jane',
-            lastName='Smith',
-            dateOfBirth='1975-08-21',
-            gender='Female',
-            email='jane.smith@example.com',
-            phone='(555) 987-6543',
-            address='456 Oak Ave, Somewhere, USA',
-            insuranceId='INS-67890',
-            medicalConditions=['Diabetes Type 2'],
-            allergies=['Sulfa', 'Shellfish'],
-            notes='Regular checkup needed every 3 months',
-            createdBy='2'  # Doctor created this record
-        ),
-        Patient(
-            id='3',
-            firstName='Patient',
-            lastName='User',
-            dateOfBirth='1990-03-10',
-            gender='Male',
-            email='patient@example.com',
-            phone='(555) 555-5555',
-            address='789 Pine St, Anywhere, USA',
-            insuranceId='INS-54321',
-            medicalConditions=['Allergic Rhinitis'],
-            allergies=['Pollen', 'Dust'],
-            notes='Patient records are only visible to themselves and medical staff',
-            createdBy='5'  # Self-registered patient
-        )
-    ]
+    doctor2 = User(
+        username='doctor2',
+        password='doctor123',  # In real app, should be hashed
+        firstName='Sarah',
+        lastName='Johnson',
+        email='sarah.johnson@hospital.com',
+        role='DOCTOR'
+    )
     
-    for patient in patients:
-        db.session.add(patient)
+    nurse = User(
+        username='nurse1',
+        password='nurse123',  # In real app, should be hashed
+        firstName='Emily',
+        lastName='Davis',
+        email='emily.davis@hospital.com',
+        role='NURSE'
+    )
     
+    receptionist = User(
+        username='reception1',
+        password='reception123',  # In real app, should be hashed
+        firstName='Mike',
+        lastName='Wilson',
+        email='mike.wilson@hospital.com',
+        role='RECEPTIONIST'
+    )
+    
+    patient_user = User(
+        username='patient1',
+        password='patient123',  # In real app, should be hashed
+        firstName='Alice',
+        lastName='Brown',
+        email='alice.brown@example.com',
+        role='PATIENT'
+    )
+    
+    db.session.add_all([admin, doctor1, doctor2, nurse, receptionist, patient_user])
     db.session.commit()
-    print("Database seeded successfully!")
+    
+    # Create patients
+    patient1 = Patient(
+        firstName='Alice',
+        lastName='Brown',
+        dateOfBirth='1985-05-15',
+        gender='Female',
+        email='alice.brown@example.com',
+        phone='555-123-4567',
+        address='123 Main St, Cityville, ST 12345',
+        insuranceId='INS12345',
+        medicalConditions=['Asthma', 'Hypertension'],
+        allergies=['Penicillin', 'Peanuts'],
+        notes='Patient has seasonal allergies and uses an inhaler as needed.',
+        createdBy=doctor1.id
+    )
+    
+    patient2 = Patient(
+        firstName='Bob',
+        lastName='Johnson',
+        dateOfBirth='1970-10-20',
+        gender='Male',
+        email='bob.johnson@example.com',
+        phone='555-987-6543',
+        address='456 Oak Ave, Townsburg, ST 67890',
+        insuranceId='INS67890',
+        medicalConditions=['Type 2 Diabetes', 'Arthritis'],
+        allergies=['Sulfa'],
+        notes='Patient needs regular blood sugar monitoring.',
+        createdBy=doctor2.id
+    )
+    
+    patient3 = Patient(
+        firstName='Carol',
+        lastName='Martinez',
+        dateOfBirth='1990-03-12',
+        gender='Female',
+        email='carol.martinez@example.com',
+        phone='555-456-7890',
+        address='789 Pine Blvd, Villageton, ST 54321',
+        insuranceId='INS54321',
+        medicalConditions=['Anxiety', 'Migraines'],
+        allergies=['Latex'],
+        notes='Patient takes preventive medication for migraines.',
+        createdBy=doctor1.id
+    )
+    
+    db.session.add_all([patient1, patient2, patient3])
+    db.session.commit()
+    
+    # Create appointments
+    appointment1 = Appointment(
+        patientId=patient1.id,
+        doctorId=doctor1.id,
+        appointmentDate='2025-04-15',
+        startTime='09:00:00',
+        endTime='09:30:00',
+        status='Scheduled',
+        reason='Annual physical exam',
+        notes='Patient requested early morning appointment'
+    )
+    
+    appointment2 = Appointment(
+        patientId=patient2.id,
+        doctorId=doctor2.id,
+        appointmentDate='2025-04-16',
+        startTime='14:00:00',
+        endTime='14:30:00',
+        status='Scheduled',
+        reason='Diabetes follow-up',
+        notes='Check A1C levels'
+    )
+    
+    appointment3 = Appointment(
+        patientId=patient3.id,
+        doctorId=doctor1.id,
+        appointmentDate='2025-04-10',
+        startTime='11:00:00',
+        endTime='11:30:00',
+        status='Completed',
+        reason='Migraine consultation',
+        notes='Discuss possible preventive therapy options'
+    )
+    
+    db.session.add_all([appointment1, appointment2, appointment3])
+    db.session.commit()
+    
+    # Create medications
+    medication1 = Medication(
+        patientId=patient1.id,
+        name='Ventolin HFA',
+        dosage='90 mcg',
+        frequency='As needed, 2 puffs',
+        startDate='2024-10-15',
+        endDate=None,  # Ongoing medication
+        prescribedBy=doctor1.id,
+        notes='Use for asthma attacks or before exercise'
+    )
+    
+    medication2 = Medication(
+        patientId=patient1.id,
+        name='Lisinopril',
+        dosage='10 mg',
+        frequency='Once daily',
+        startDate='2024-11-01',
+        endDate=None,  # Ongoing medication
+        prescribedBy=doctor1.id,
+        notes='Take for blood pressure control'
+    )
+    
+    medication3 = Medication(
+        patientId=patient2.id,
+        name='Metformin',
+        dosage='500 mg',
+        frequency='Twice daily with meals',
+        startDate='2024-09-20',
+        endDate=None,  # Ongoing medication
+        prescribedBy=doctor2.id,
+        notes='For diabetes management'
+    )
+    
+    medication4 = Medication(
+        patientId=patient3.id,
+        name='Sumatriptan',
+        dosage='50 mg',
+        frequency='As needed for migraine, max 200mg per day',
+        startDate='2025-01-05',
+        endDate=None,  # Ongoing medication
+        prescribedBy=doctor1.id,
+        notes='Take at first sign of migraine'
+    )
+    
+    db.session.add_all([medication1, medication2, medication3, medication4])
+    db.session.commit()
+    
+    # Create medical records
+    record1 = MedicalRecord(
+        patientId=patient1.id,
+        doctorId=doctor1.id,
+        visitDate='2025-01-15',
+        chiefComplaint='Shortness of breath, wheezing',
+        diagnosis='Moderate asthma exacerbation',
+        treatmentPlan='Increased inhaler use, added oral steroid for 5 days',
+        followUpNeeded=True,
+        notes='Patient showing improvement with current regimen'
+    )
+    
+    record2 = MedicalRecord(
+        patientId=patient2.id,
+        doctorId=doctor2.id,
+        visitDate='2025-02-10',
+        chiefComplaint='Elevated blood sugar readings',
+        diagnosis='Poorly controlled Type 2 Diabetes',
+        treatmentPlan='Adjusted medication dosage, dietary counseling, daily glucose monitoring',
+        followUpNeeded=True,
+        notes='Patient needs to maintain food diary'
+    )
+    
+    record3 = MedicalRecord(
+        patientId=patient3.id,
+        doctorId=doctor1.id,
+        visitDate='2025-03-05',
+        chiefComplaint='Severe headache, visual aura, nausea',
+        diagnosis='Migraine with aura',
+        treatmentPlan='Prescribed acute medication, trigger avoidance education',
+        followUpNeeded=True,
+        notes='Discussed possible preventive therapy options'
+    )
+    
+    db.session.add_all([record1, record2, record3])
+    db.session.commit()
+    
+    return jsonify({
+        'message': 'Database seeded successfully',
+        'users': len([admin, doctor1, doctor2, nurse, receptionist, patient_user]),
+        'patients': len([patient1, patient2, patient3]),
+        'appointments': len([appointment1, appointment2, appointment3]),
+        'medications': len([medication1, medication2, medication3, medication4]),
+        'medical_records': len([record1, record2, record3])
+    })
 
-# Simple route to bypass authentication for demo purposes
 @app.route('/api/demo/patients', methods=['GET'])
 def demo_get_patients():
     patients = Patient.query.all()
     return jsonify([patient.to_dict() for patient in patients])
 
 if __name__ == '__main__':
+    # Create database tables if they don't exist
+    with app.app_context():
+        db.create_all()
+        print("Database tables created successfully!")
+    
     port = int(os.environ.get('PORT', 3001))
     app.run(host='0.0.0.0', port=port, debug=True)

@@ -8,7 +8,7 @@ const bodyParser = require('body-parser');
 const services = {
   patient: {
     url: process.env.PATIENT_SERVICE_URL || 'http://localhost:3001',
-    endpoints: ['/api/patients']
+    endpoints: ['/api/patients', '/api/appointments', '/api/medications', '/api/medical-records', '/api/auth/login']
   },
   // Add additional services here as your system grows
   // appointment: {
@@ -89,6 +89,70 @@ app.use('/api/patients', createProxyMiddleware({
   }
 }));
 
+// Appointments proxy
+app.use('/api/appointments', createProxyMiddleware({ 
+  target: services.patient.url,
+  changeOrigin: true,
+  pathRewrite: {
+    '^/api/appointments': '/api/appointments'
+  },
+  onError: (err, req, res) => {
+    console.error(`[Proxy Error] ${err.message}`);
+    res.status(500).json({
+      error: 'Service Unavailable',
+      message: 'The appointments service is currently unavailable. Please try again later.'
+    });
+  }
+}));
+
+// Medications proxy
+app.use('/api/medications', createProxyMiddleware({ 
+  target: services.patient.url,
+  changeOrigin: true,
+  pathRewrite: {
+    '^/api/medications': '/api/medications'
+  },
+  onError: (err, req, res) => {
+    console.error(`[Proxy Error] ${err.message}`);
+    res.status(500).json({
+      error: 'Service Unavailable',
+      message: 'The medications service is currently unavailable. Please try again later.'
+    });
+  }
+}));
+
+// Medical Records proxy
+app.use('/api/medical-records', createProxyMiddleware({ 
+  target: services.patient.url,
+  changeOrigin: true,
+  pathRewrite: {
+    '^/api/medical-records': '/api/medical-records'
+  },
+  onError: (err, req, res) => {
+    console.error(`[Proxy Error] ${err.message}`);
+    res.status(500).json({
+      error: 'Service Unavailable',
+      message: 'The medical records service is currently unavailable. Please try again later.'
+    });
+  }
+}));
+
+// Authentication proxy
+app.use('/api/auth', createProxyMiddleware({ 
+  target: services.patient.url,
+  changeOrigin: true,
+  pathRewrite: {
+    '^/api/auth': '/api/auth'
+  },
+  onError: (err, req, res) => {
+    console.error(`[Proxy Error] ${err.message}`);
+    res.status(500).json({
+      error: 'Service Unavailable',
+      message: 'The authentication service is currently unavailable. Please try again later.'
+    });
+  }
+}));
+
 // Gateway API endpoints
 // Health check endpoint with service status
 app.get('/health', async (req, res) => {
@@ -128,6 +192,39 @@ app.get('/api-docs', (req, res) => {
           { method: 'POST', path: '/api/patients', description: 'Create a new patient' },
           { method: 'PUT', path: '/api/patients/:id', description: 'Update a patient' },
           { method: 'DELETE', path: '/api/patients/:id', description: 'Delete a patient' }
+        ]
+      },
+      {
+        name: 'Appointments Service',
+        basePath: '/api/appointments',
+        endpoints: [
+          { method: 'GET', path: '/api/appointments', description: 'Get all appointments' },
+          { method: 'GET', path: '/api/appointments/:id', description: 'Get appointment by ID' },
+          { method: 'POST', path: '/api/appointments', description: 'Create a new appointment' },
+          { method: 'PUT', path: '/api/appointments/:id', description: 'Update an appointment' },
+          { method: 'DELETE', path: '/api/appointments/:id', description: 'Delete an appointment' }
+        ]
+      },
+      {
+        name: 'Medications Service',
+        basePath: '/api/medications',
+        endpoints: [
+          { method: 'GET', path: '/api/medications', description: 'Get all medications' },
+          { method: 'GET', path: '/api/medications/:id', description: 'Get medication by ID' },
+          { method: 'POST', path: '/api/medications', description: 'Create a new medication' },
+          { method: 'PUT', path: '/api/medications/:id', description: 'Update a medication' },
+          { method: 'DELETE', path: '/api/medications/:id', description: 'Delete a medication' }
+        ]
+      },
+      {
+        name: 'Medical Records Service',
+        basePath: '/api/medical-records',
+        endpoints: [
+          { method: 'GET', path: '/api/medical-records', description: 'Get all medical records' },
+          { method: 'GET', path: '/api/medical-records/:id', description: 'Get medical record by ID' },
+          { method: 'POST', path: '/api/medical-records', description: 'Create a new medical record' },
+          { method: 'PUT', path: '/api/medical-records/:id', description: 'Update a medical record' },
+          { method: 'DELETE', path: '/api/medical-records/:id', description: 'Delete a medical record' }
         ]
       }
     ]

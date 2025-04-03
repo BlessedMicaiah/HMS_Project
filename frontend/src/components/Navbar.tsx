@@ -42,6 +42,15 @@ const Navbar = () => {
         <div className={`navbar-links ${expanded ? 'show' : ''}`}>
           <div className="nav-item-container">
             <Link 
+              to="/dashboard" 
+              className={`nav-item ${isActive('/dashboard')}`}
+              onClick={() => setExpanded(false)}
+            >
+              <div className="nav-icon">🏠</div>
+              <span className="nav-text">Dashboard</span>
+            </Link>
+            
+            <Link 
               to="/patients" 
               className={`nav-item ${isActive('/patients')}`}
               onClick={() => setExpanded(false)}
@@ -51,12 +60,39 @@ const Navbar = () => {
             </Link>
             
             <Link 
+              to="/appointments" 
+              className={`nav-item ${isActive('/appointments')}`}
+              onClick={() => setExpanded(false)}
+            >
+              <div className="nav-icon">📅</div>
+              <span className="nav-text">Appts</span>
+            </Link>
+
+            <Link 
+              to="/medications" 
+              className={`nav-item ${isActive('/medications')}`}
+              onClick={() => setExpanded(false)}
+            >
+              <div className="nav-icon">💊</div>
+              <span className="nav-text">Meds</span>
+            </Link>
+
+            <Link 
+              to="/medical-records" 
+              className={`nav-item ${isActive('/medical-records')}`}
+              onClick={() => setExpanded(false)}
+            >
+              <div className="nav-icon">📋</div>
+              <span className="nav-text">Records</span>
+            </Link>
+            
+            <Link 
               to="/patients/new" 
               className={`nav-item ${isActive('/patients/new')}`}
               onClick={() => setExpanded(false)}
             >
               <div className="nav-icon">➕</div>
-              <span className="nav-text">Add Patient</span>
+              <span className="nav-text">Add</span>
             </Link>
 
             {currentUser && (

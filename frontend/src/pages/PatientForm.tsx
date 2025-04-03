@@ -4,6 +4,7 @@ import { Form, Button, Card, Alert, Col, Row, ProgressBar } from 'react-bootstra
 import { getPatient, createPatient, updatePatient } from '../services/patientService';
 import { Patient } from '../types/patient';
 import { useAuth } from '../context/AuthContext';
+import '../styles/PatientForm.css';
 
 const PatientForm = () => {
   const { id } = useParams<{ id: string }>();
@@ -90,15 +91,15 @@ const PatientForm = () => {
     }
     
     if (name === 'medicalConditions' || name === 'allergies') {
-      setFormData({
-        ...formData,
-        [name]: value.split(',').map(item => item.trim()).filter(item => item !== '')
-      });
+      setFormData(prevData => ({
+        ...prevData,
+        [name]: value.trim() === '' ? [] : value.split(',').map(item => item.trim()).filter(item => item !== '')
+      }));
     } else {
-      setFormData({
-        ...formData,
+      setFormData(prevData => ({
+        ...prevData,
         [name]: value
-      });
+      }));
     }
   };
 
@@ -166,10 +167,18 @@ const PatientForm = () => {
       setLoading(true);
       setSavingAnimation(true);
       
+      // Prepare the data, include the image if needed
+      let patientData = { ...formData };
+      
+      // Always ensure we set the createdBy field to the current user's ID when creating a new patient
+      if (!isEditMode && currentUser) {
+        patientData.createdBy = currentUser.id;
+      }
+      
       if (isEditMode) {
-        await updatePatient(id!, formData);
+        await updatePatient(id!, patientData);
       } else {
-        await createPatient(formData);
+        await createPatient(patientData);
       }
       
       // Delay navigation slightly to show the saving animation
@@ -189,6 +198,264 @@ const PatientForm = () => {
   const canEditMedicalInfo = hasPermission('write');
   const canEditBasicInfo = hasPermission('limited_write') || hasPermission('write');
 
+  // Render appropriate step indicator
+  const renderStepIndicator = () => {
+    return (
+      <div className="step-indicator">
+        <ProgressBar now={progress} className="step-progress" />
+        <div className="step-labels d-flex justify-content-between">
+          <span className={currentStep === 1 ? 'active' : ''}>Basic Info</span>
+          <span className={currentStep === 2 ? 'active' : ''}>Contact</span>
+          <span className={currentStep === 3 ? 'active' : ''}>Medical History</span>
+        </div>
+      </div>
+    );
+  };
+
+  // Render different form sections based on current step
+  const renderFormStep = () => {
+    if (currentStep === 1) {
+      return (
+        <div className="form-step">
+          <Row className="step-content">
+            <Col md={4} className="mb-3 text-center">
+              <Form.Group controlId="profileImage">
+                <Form.Label>Profile Image</Form.Label>
+                <div className="profile-image-preview mb-3">
+                  {previewImage ? (
+                    <img 
+                      src={previewImage} 
+                      alt="Patient" 
+                      className="profile-img" 
+                    />
+                  ) : (
+                    <div className="profile-placeholder">
+                      <span>📷</span>
+                    </div>
+                  )}
+                </div>
+                {canEditBasicInfo && (
+                  <div className="file-upload-wrapper">
+                    <Form.Control
+                      type="file"
+                      onChange={handleImageChange}
+                      accept="image/*"
+                      className="custom-file-input"
+                    />
+                    <Button variant="outline-primary" className="upload-btn">
+                      Choose Image
+                    </Button>
+                  </div>
+                )}
+              </Form.Group>
+            </Col>
+            
+            <Col md={8}>
+              <div className="input-group-animated">
+                <Form.Group className="floating-group mb-4" controlId="firstName">
+                  <Form.Control
+                    type="text"
+                    name="firstName"
+                    value={formData.firstName}
+                    onChange={handleChange}
+                    placeholder=" "
+                    required
+                    disabled={!canEditBasicInfo}
+                    className="floating-input"
+                  />
+                  <Form.Label className="floating-label">First Name</Form.Label>
+                  <Form.Control.Feedback type="invalid">
+                    Please provide a first name.
+                  </Form.Control.Feedback>
+                </Form.Group>
+
+                <Form.Group className="floating-group mb-4" controlId="lastName">
+                  <Form.Control
+                    type="text"
+                    name="lastName"
+                    value={formData.lastName}
+                    onChange={handleChange}
+                    placeholder=" "
+                    required
+                    disabled={!canEditBasicInfo}
+                    className="floating-input"
+                  />
+                  <Form.Label className="floating-label">Last Name</Form.Label>
+                  <Form.Control.Feedback type="invalid">
+                    Please provide a last name.
+                  </Form.Control.Feedback>
+                </Form.Group>
+
+                <Row>
+                  <Col md={6}>
+                    <Form.Group className="floating-group mb-4" controlId="dateOfBirth">
+                      <Form.Control
+                        type="date"
+                        name="dateOfBirth"
+                        value={formData.dateOfBirth}
+                        onChange={handleChange}
+                        required
+                        disabled={!canEditBasicInfo}
+                        className="floating-input"
+                      />
+                      <Form.Label className="floating-label">Date of Birth</Form.Label>
+                      <Form.Control.Feedback type="invalid">
+                        Please provide a date of birth.
+                      </Form.Control.Feedback>
+                    </Form.Group>
+                  </Col>
+                  
+                  <Col md={6}>
+                    <Form.Group className="mb-4" controlId="gender">
+                      <Form.Label className="select-label">Gender</Form.Label>
+                      <Form.Select
+                        name="gender"
+                        value={formData.gender}
+                        onChange={handleChange}
+                        required
+                        disabled={!canEditBasicInfo}
+                        className="custom-select"
+                      >
+                        <option value="">Select gender</option>
+                        <option value="Male">Male</option>
+                        <option value="Female">Female</option>
+                        <option value="Other">Other</option>
+                      </Form.Select>
+                      <Form.Control.Feedback type="invalid">
+                        Please select a gender.
+                      </Form.Control.Feedback>
+                    </Form.Group>
+                  </Col>
+                </Row>
+              </div>
+            </Col>
+          </Row>
+        </div>
+      );
+    }
+    else if (currentStep === 2) {
+      return (
+        <div className="form-step">
+          <div className="step-content input-group-animated">
+            <Row>
+              <Col md={6}>
+                <Form.Group className="floating-group mb-4" controlId="email">
+                  <Form.Control
+                    type="email"
+                    name="email"
+                    value={formData.email}
+                    onChange={handleChange}
+                    placeholder=" "
+                    required
+                    disabled={!canEditBasicInfo}
+                    className="floating-input"
+                  />
+                  <Form.Label className="floating-label">Email</Form.Label>
+                  <Form.Control.Feedback type="invalid">
+                    Please provide a valid email.
+                  </Form.Control.Feedback>
+                </Form.Group>
+              </Col>
+              
+              <Col md={6}>
+                <Form.Group className="floating-group mb-4" controlId="phone">
+                  <Form.Control
+                    type="tel"
+                    name="phone"
+                    value={formData.phone}
+                    onChange={handleChange}
+                    placeholder=" "
+                    required
+                    disabled={!canEditBasicInfo}
+                    className="floating-input"
+                  />
+                  <Form.Label className="floating-label">Phone</Form.Label>
+                  <Form.Control.Feedback type="invalid">
+                    Please provide a phone number.
+                  </Form.Control.Feedback>
+                </Form.Group>
+              </Col>
+            </Row>
+            
+            <Form.Group className="floating-group mb-4" controlId="address">
+              <Form.Control
+                as="textarea"
+                rows={2}
+                name="address"
+                value={formData.address}
+                onChange={handleChange}
+                placeholder=" "
+                required
+                disabled={!canEditBasicInfo}
+                className="floating-input textarea-input"
+              />
+              <Form.Label className="floating-label">Address</Form.Label>
+              <Form.Control.Feedback type="invalid">
+                Please provide an address.
+              </Form.Control.Feedback>
+            </Form.Group>
+          </div>
+        </div>
+      );
+    }
+    else if (currentStep === 3) {
+      return (
+        <div className="form-step" style={{ display: 'block', visibility: 'visible', opacity: 1 } as React.CSSProperties}>
+          <div className="step-content" style={{ display: 'block', visibility: 'visible' } as React.CSSProperties}>
+            <Form.Group className="mb-3">
+              <Form.Label>Insurance ID</Form.Label>
+              <Form.Control
+                type="text"
+                name="insuranceId"
+                value={formData.insuranceId || ''}
+                onChange={handleChange}
+                disabled={!canEditMedicalInfo}
+              />
+            </Form.Group>
+            
+            <Form.Group className="mb-3">
+              <Form.Label>Medical Conditions (comma-separated)</Form.Label>
+              <Form.Control
+                as="textarea"
+                rows={3}
+                name="medicalConditions"
+                value={Array.isArray(formData.medicalConditions) ? formData.medicalConditions.join(', ') : ''}
+                onChange={handleChange}
+                disabled={!canEditMedicalInfo}
+              />
+            </Form.Group>
+            
+            <Form.Group className="mb-3">
+              <Form.Label>Allergies (comma-separated)</Form.Label>
+              <Form.Control
+                as="textarea"
+                rows={3}
+                name="allergies"
+                value={Array.isArray(formData.allergies) ? formData.allergies.join(', ') : ''}
+                onChange={handleChange}
+                disabled={!canEditMedicalInfo}
+              />
+            </Form.Group>
+            
+            <Form.Group className="mb-3">
+              <Form.Label>Notes</Form.Label>
+              <Form.Control
+                as="textarea"
+                rows={3}
+                name="notes"
+                value={formData.notes || ''}
+                onChange={handleChange}
+                disabled={!canEditBasicInfo}
+              />
+            </Form.Group>
+          </div>
+        </div>
+      );
+    }
+    
+    return null;
+  };
+
   if (loading && isEditMode) {
     return (
       <div className="loading-spinner">
@@ -196,271 +463,6 @@ const PatientForm = () => {
       </div>
     );
   }
-
-  // Render step indicator
-  const renderStepIndicator = () => (
-    <div className="step-indicator mb-4">
-      <div className="step-labels d-flex justify-content-between mb-2">
-        <span className={`step-label ${currentStep >= 1 ? 'active' : ''}`}>Basic Info</span>
-        <span className={`step-label ${currentStep >= 2 ? 'active' : ''}`}>Contact</span>
-        <span className={`step-label ${currentStep >= 3 ? 'active' : ''}`}>Medical</span>
-      </div>
-      <div className="custom-progress">
-        <ProgressBar now={progress} variant="info" />
-      </div>
-    </div>
-  );
-
-  // Render different form sections based on current step
-  const renderFormStep = () => {
-    switch(currentStep) {
-      case 1:
-        return (
-          <div className="form-step">
-            <Row className="step-content">
-              <Col md={4} className="mb-3 text-center">
-                <Form.Group controlId="profileImage">
-                  <Form.Label>Profile Image</Form.Label>
-                  <div className="profile-image-preview mb-3">
-                    {previewImage ? (
-                      <img 
-                        src={previewImage} 
-                        alt="Patient" 
-                        className="profile-img" 
-                      />
-                    ) : (
-                      <div className="profile-placeholder">
-                        <span>📷</span>
-                      </div>
-                    )}
-                  </div>
-                  {canEditBasicInfo && (
-                    <div className="file-upload-wrapper">
-                      <Form.Control
-                        type="file"
-                        onChange={handleImageChange}
-                        accept="image/*"
-                        className="custom-file-input"
-                      />
-                      <Button variant="outline-primary" className="upload-btn">
-                        Choose Image
-                      </Button>
-                    </div>
-                  )}
-                </Form.Group>
-              </Col>
-              
-              <Col md={8}>
-                <div className="input-group-animated">
-                  <Form.Group className="floating-group mb-4" controlId="firstName">
-                    <Form.Control
-                      type="text"
-                      name="firstName"
-                      value={formData.firstName}
-                      onChange={handleChange}
-                      placeholder=" "
-                      required
-                      disabled={!canEditBasicInfo}
-                      className="floating-input"
-                    />
-                    <Form.Label className="floating-label">First Name</Form.Label>
-                    <Form.Control.Feedback type="invalid">
-                      Please provide a first name.
-                    </Form.Control.Feedback>
-                  </Form.Group>
-
-                  <Form.Group className="floating-group mb-4" controlId="lastName">
-                    <Form.Control
-                      type="text"
-                      name="lastName"
-                      value={formData.lastName}
-                      onChange={handleChange}
-                      placeholder=" "
-                      required
-                      disabled={!canEditBasicInfo}
-                      className="floating-input"
-                    />
-                    <Form.Label className="floating-label">Last Name</Form.Label>
-                    <Form.Control.Feedback type="invalid">
-                      Please provide a last name.
-                    </Form.Control.Feedback>
-                  </Form.Group>
-
-                  <Row>
-                    <Col md={6}>
-                      <Form.Group className="floating-group mb-4" controlId="dateOfBirth">
-                        <Form.Control
-                          type="date"
-                          name="dateOfBirth"
-                          value={formData.dateOfBirth}
-                          onChange={handleChange}
-                          required
-                          disabled={!canEditBasicInfo}
-                          className="floating-input"
-                        />
-                        <Form.Label className="floating-label">Date of Birth</Form.Label>
-                        <Form.Control.Feedback type="invalid">
-                          Please provide a date of birth.
-                        </Form.Control.Feedback>
-                      </Form.Group>
-                    </Col>
-                    
-                    <Col md={6}>
-                      <Form.Group className="mb-4" controlId="gender">
-                        <Form.Label className="select-label">Gender</Form.Label>
-                        <Form.Select
-                          name="gender"
-                          value={formData.gender}
-                          onChange={handleChange}
-                          required
-                          disabled={!canEditBasicInfo}
-                          className="custom-select"
-                        >
-                          <option value="">Select gender</option>
-                          <option value="Male">Male</option>
-                          <option value="Female">Female</option>
-                          <option value="Other">Other</option>
-                        </Form.Select>
-                        <Form.Control.Feedback type="invalid">
-                          Please select a gender.
-                        </Form.Control.Feedback>
-                      </Form.Group>
-                    </Col>
-                  </Row>
-                </div>
-              </Col>
-            </Row>
-          </div>
-        );
-      case 2:
-        return (
-          <div className="form-step">
-            <div className="step-content input-group-animated">
-              <Row>
-                <Col md={6}>
-                  <Form.Group className="floating-group mb-4" controlId="email">
-                    <Form.Control
-                      type="email"
-                      name="email"
-                      value={formData.email}
-                      onChange={handleChange}
-                      placeholder=" "
-                      required
-                      disabled={!canEditBasicInfo}
-                      className="floating-input"
-                    />
-                    <Form.Label className="floating-label">Email</Form.Label>
-                    <Form.Control.Feedback type="invalid">
-                      Please provide a valid email.
-                    </Form.Control.Feedback>
-                  </Form.Group>
-                </Col>
-                
-                <Col md={6}>
-                  <Form.Group className="floating-group mb-4" controlId="phone">
-                    <Form.Control
-                      type="tel"
-                      name="phone"
-                      value={formData.phone}
-                      onChange={handleChange}
-                      placeholder=" "
-                      required
-                      disabled={!canEditBasicInfo}
-                      className="floating-input"
-                    />
-                    <Form.Label className="floating-label">Phone</Form.Label>
-                    <Form.Control.Feedback type="invalid">
-                      Please provide a phone number.
-                    </Form.Control.Feedback>
-                  </Form.Group>
-                </Col>
-              </Row>
-              
-              <Form.Group className="floating-group mb-4" controlId="address">
-                <Form.Control
-                  as="textarea"
-                  rows={2}
-                  name="address"
-                  value={formData.address}
-                  onChange={handleChange}
-                  placeholder=" "
-                  required
-                  disabled={!canEditBasicInfo}
-                  className="floating-input textarea-input"
-                />
-                <Form.Label className="floating-label">Address</Form.Label>
-                <Form.Control.Feedback type="invalid">
-                  Please provide an address.
-                </Form.Control.Feedback>
-              </Form.Group>
-            </div>
-          </div>
-        );
-      case 3:
-        return (
-          <div className="form-step">
-            <div className="step-content input-group-animated">
-              <Form.Group className="floating-group mb-4" controlId="insuranceId">
-                <Form.Control
-                  type="text"
-                  name="insuranceId"
-                  value={formData.insuranceId}
-                  onChange={handleChange}
-                  placeholder=" "
-                  disabled={!canEditMedicalInfo}
-                  className="floating-input"
-                />
-                <Form.Label className="floating-label">Insurance ID</Form.Label>
-              </Form.Group>
-              
-              <Form.Group className="floating-group mb-4" controlId="medicalConditions">
-                <Form.Control
-                  as="textarea"
-                  rows={2}
-                  name="medicalConditions"
-                  value={formData.medicalConditions?.join(', ')}
-                  onChange={handleChange}
-                  placeholder=" "
-                  disabled={!canEditMedicalInfo}
-                  className="floating-input textarea-input"
-                />
-                <Form.Label className="floating-label">Medical Conditions (comma-separated)</Form.Label>
-              </Form.Group>
-              
-              <Form.Group className="floating-group mb-4" controlId="allergies">
-                <Form.Control
-                  as="textarea"
-                  rows={2}
-                  name="allergies"
-                  value={formData.allergies?.join(', ')}
-                  onChange={handleChange}
-                  placeholder=" "
-                  disabled={!canEditMedicalInfo}
-                  className="floating-input textarea-input"
-                />
-                <Form.Label className="floating-label">Allergies (comma-separated)</Form.Label>
-              </Form.Group>
-              
-              <Form.Group className="floating-group mb-4" controlId="notes">
-                <Form.Control
-                  as="textarea"
-                  rows={3}
-                  name="notes"
-                  value={formData.notes}
-                  onChange={handleChange}
-                  placeholder=" "
-                  disabled={!canEditBasicInfo}
-                  className="floating-input textarea-input"
-                />
-                <Form.Label className="floating-label">Notes</Form.Label>
-              </Form.Group>
-            </div>
-          </div>
-        );
-      default:
-        return null;
-    }
-  };
 
   return (
     <div className="form-container">
@@ -479,10 +481,80 @@ const PatientForm = () => {
       
       <Card className="form-card">
         <Card.Body>
-          <Form noValidate validated={validated} onSubmit={handleSubmit}>
+          <Form noValidate validated={validated} onSubmit={handleSubmit} className="needs-validation">
             {renderStepIndicator()}
             
-            {renderFormStep()}
+            <div style={{ minHeight: "400px" }}>
+              {/* Step 1: Basic Information */}
+              {currentStep === 1 && (
+                <div className="form-step">
+                  {/* Form content for step 1 */}
+                  {renderFormStep()}
+                </div>
+              )}
+              
+              {/* Step 2: Contact Details */}
+              {currentStep === 2 && (
+                <div className="form-step">
+                  {/* Form content for step 2 */}
+                  {renderFormStep()}
+                </div>
+              )}
+              
+              {/* Step 3: Medical History (fixed to show properly) */}
+              {currentStep === 3 && (
+                <div className="form-step" style={{ display: 'block' } as React.CSSProperties}>
+                  <div className="step-content">
+                    <Form.Group className="mb-3">
+                      <Form.Label>Insurance ID</Form.Label>
+                      <Form.Control
+                        type="text"
+                        name="insuranceId"
+                        value={formData.insuranceId || ''}
+                        onChange={handleChange}
+                        disabled={!canEditMedicalInfo}
+                      />
+                    </Form.Group>
+                    
+                    <Form.Group className="mb-3">
+                      <Form.Label>Medical Conditions (comma-separated)</Form.Label>
+                      <Form.Control
+                        as="textarea"
+                        rows={3}
+                        name="medicalConditions"
+                        value={Array.isArray(formData.medicalConditions) ? formData.medicalConditions.join(', ') : ''}
+                        onChange={handleChange}
+                        disabled={!canEditMedicalInfo}
+                      />
+                    </Form.Group>
+                    
+                    <Form.Group className="mb-3">
+                      <Form.Label>Allergies (comma-separated)</Form.Label>
+                      <Form.Control
+                        as="textarea"
+                        rows={3}
+                        name="allergies"
+                        value={Array.isArray(formData.allergies) ? formData.allergies.join(', ') : ''}
+                        onChange={handleChange}
+                        disabled={!canEditMedicalInfo}
+                      />
+                    </Form.Group>
+                    
+                    <Form.Group className="mb-3">
+                      <Form.Label>Notes</Form.Label>
+                      <Form.Control
+                        as="textarea"
+                        rows={3}
+                        name="notes"
+                        value={formData.notes || ''}
+                        onChange={handleChange}
+                        disabled={!canEditBasicInfo}
+                      />
+                    </Form.Group>
+                  </div>
+                </div>
+              )}
+            </div>
             
             <div className="form-navigation d-flex justify-content-between mt-4 mb-2">
               {currentStep > 1 ? (

@@ -1,8 +1,22 @@
 import axios from 'axios';
 import { Patient } from '../types/patient';
+import { getCurrentUser } from './authService';
 
 // Use the correct API URL for our backend server
-const API_URL = 'http://localhost:3001/api/demo/patients';
+const API_URL = process.env.REACT_APP_API_URL || 'http://localhost:3001/api/demo/patients';
+
+// Pagination response interface
+export interface PaginatedResponse<T> {
+  data: T[];
+  pagination: {
+    total: number;
+    per_page: number;
+    current_page: number;
+    total_pages: number;
+    has_next: boolean;
+    has_prev: boolean;
+  };
+}
 
 // We'll keep the mock data for fallback, but primarily use the API
 const mockPatients: Patient[] = [
@@ -18,7 +32,8 @@ const mockPatients: Patient[] = [
     insuranceId: 'INS-12345',
     medicalConditions: ['Hypertension', 'Asthma'],
     allergies: ['Penicillin'],
-    notes: 'Patient prefers morning appointments'
+    notes: 'Patient prefers morning appointments',
+    createdBy: 'user1'
   },
   {
     id: '2',
@@ -32,24 +47,55 @@ const mockPatients: Patient[] = [
     insuranceId: 'INS-67890',
     medicalConditions: ['Diabetes Type 2'],
     allergies: ['Sulfa', 'Shellfish'],
-    notes: 'Regular checkup needed every 3 months'
+    notes: 'Regular checkup needed every 3 months',
+    createdBy: 'user2'
   }
 ];
 
 // In-memory store for patients (for disconnected operation)
 let inMemoryPatients = [...mockPatients];
 
-export const getPatients = async (): Promise<Patient[]> => {
+export const getPatients = async (page: number = 1, perPage: number = 10): Promise<PaginatedResponse<Patient>> => {
   try {
     // Use the actual API endpoint
-    const response = await axios.get(API_URL);
+    const response = await axios.get(`${API_URL}?page=${page}&per_page=${perPage}`);
+    const paginatedResponse: PaginatedResponse<Patient> = response.data;
+    
     // Store the data in our in-memory cache
-    inMemoryPatients = response.data;
-    return response.data;
+    inMemoryPatients = paginatedResponse.data;
+    
+    // Filter patients based on user role
+    const currentUser = getCurrentUser();
+    if (currentUser && currentUser.role !== 'ADMIN') {
+      // For non-admin users, only return patients they've created or are assigned to
+      paginatedResponse.data = paginatedResponse.data.filter(patient => patient.createdBy === currentUser.id);
+    }
+    
+    return paginatedResponse;
   } catch (error) {
     console.error('Error fetching patients from API:', error);
     // Fall back to in-memory data
-    return inMemoryPatients;
+    
+    // Filter patients based on user role
+    const currentUser = getCurrentUser();
+    if (currentUser && currentUser.role !== 'ADMIN') {
+      // For non-admin users, only return patients they've created or are assigned to
+      inMemoryPatients = inMemoryPatients.filter(patient => patient.createdBy === currentUser.id);
+    }
+    
+    const paginatedResponse: PaginatedResponse<Patient> = {
+      data: inMemoryPatients.slice((page - 1) * perPage, page * perPage),
+      pagination: {
+        total: inMemoryPatients.length,
+        per_page: perPage,
+        current_page: page,
+        total_pages: Math.ceil(inMemoryPatients.length / perPage),
+        has_next: page < Math.ceil(inMemoryPatients.length / perPage),
+        has_prev: page > 1
+      }
+    };
+    
+    return paginatedResponse;
   }
 };
 

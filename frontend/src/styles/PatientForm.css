@@ -1,0 +1,159 @@
+/* Patient Form Styles */
+
+.form-container {
+  max-width: 800px;
+  margin: 0 auto;
+  padding: 20px;
+}
+
+.form-card {
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+  border-radius: 10px;
+  border: none;
+  margin-bottom: 30px;
+}
+
+.form-header {
+  margin-bottom: 25px;
+}
+
+.form-subtitle {
+  color: #666;
+  font-size: 0.9rem;
+  margin-top: 5px;
+}
+
+.step-container {
+  min-height: 400px;
+  position: relative;
+  overflow: visible;
+}
+
+.form-step {
+  animation: fadeIn 0.3s ease-in-out;
+  height: 100%;
+  width: 100%;
+}
+
+.step-content {
+  padding: 10px 0;
+}
+
+.step-indicator {
+  margin-bottom: 25px;
+}
+
+.step-progress {
+  height: 10px;
+  border-radius: 5px;
+  margin-bottom: 10px;
+  transition: width 0.3s ease;
+}
+
+.form-navigation {
+  margin-top: 20px;
+  border-top: 1px solid #eee;
+  padding-top: 20px;
+}
+
+.navigation-btn {
+  transition: all 0.2s ease;
+  min-width: 120px;
+}
+
+.navigation-btn:hover:not(:disabled) {
+  transform: translateY(-2px);
+}
+
+.btn-icon {
+  display: inline-block;
+  margin: 0 5px;
+}
+
+.floating-group {
+  position: relative;
+  margin-bottom: 1.5rem;
+}
+
+.floating-input {
+  height: 50px;
+  border-radius: 6px;
+  padding: 0.75rem 0.75rem;
+  font-size: 1rem;
+  line-height: 1.5;
+  transition: all 0.2s ease;
+}
+
+.textarea-input {
+  min-height: 100px;
+  resize: vertical;
+}
+
+.floating-label {
+  position: absolute;
+  top: 0;
+  left: 0;
+  padding: 0.75rem 0.75rem;
+  pointer-events: none;
+  border: 1px solid transparent;
+  transform-origin: 0 0;
+  transition: opacity 0.2s ease-in-out, transform 0.2s ease-in-out;
+}
+
+.floating-input:focus ~ .floating-label,
+.floating-input:not(:placeholder-shown) ~ .floating-label {
+  opacity: 0.8;
+  transform: scale(0.8) translateY(-10px) translateX(10px);
+  background-color: white;
+  padding: 0 0.5rem;
+}
+
+.saving-dots span {
+  animation: dots 1.5s infinite;
+  animation-fill-mode: both;
+}
+
+.saving-dots span:nth-child(2) {
+  animation-delay: 0.2s;
+}
+
+.saving-dots span:nth-child(3) {
+  animation-delay: 0.4s;
+}
+
+@keyframes dots {
+  0% {
+    opacity: 0;
+  }
+  50% {
+    opacity: 1;
+  }
+  100% {
+    opacity: 0;
+  }
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* Fix for step 3 to ensure it stays on screen */
+#step3Content {
+  position: static !important;
+  visibility: visible !important;
+  opacity: 1 !important;
+  height: auto !important;
+  overflow: visible !important;
+}
+
+/* Fix for medical history fields */
+.medical-history-section textarea {
+  min-height: 80px;
+}
