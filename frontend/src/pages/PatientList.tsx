@@ -17,12 +17,14 @@ const PatientList = () => {
     try {
       setLoading(true);
       const response = await getPatients();
-      setPatients(response.data);
-      setFilteredPatients(response.data);
+      setPatients(response?.data || []);
+      setFilteredPatients(response?.data || []);
       setError(null);
     } catch (err) {
+      console.error('Error fetching patients:', err);
       setError('Failed to fetch patients');
-      console.error(err);
+      setPatients([]);
+      setFilteredPatients([]);
     } finally {
       setLoading(false);
     }
@@ -30,25 +32,23 @@ const PatientList = () => {
 
   useEffect(() => {
     fetchPatients();
-  }, [fetchPatients, location.key]); // Re-fetch when location changes (navigation)
+  }, [fetchPatients, location.key]); 
 
   useEffect(() => {
-    // Filter patients based on search term and active filter
-    let result = patients;
+    let result = patients || [];
     
-    // Apply search filter
-    if (searchTerm) {
+    if (searchTerm && result.length > 0) {
       const term = searchTerm.toLowerCase();
       result = result.filter(patient => 
-        `${patient.firstName} ${patient.lastName}`.toLowerCase().includes(term) ||
-        patient.email.toLowerCase().includes(term) ||
-        patient.phone.includes(term)
+        patient && `${patient?.firstName || ''} ${patient?.lastName || ''}`.toLowerCase().includes(term) ||
+        (patient?.email || '').toLowerCase().includes(term) ||
+        (patient?.phone || '').includes(term)
       );
     }
     
-    // Apply category filter
-    if (activeFilter !== 'all') {
+    if (activeFilter !== 'all' && result.length > 0) {
       result = result.filter(patient => {
+        if (!patient || !patient.gender) return false;
         if (activeFilter === 'male') return patient.gender.toLowerCase() === 'male';
         if (activeFilter === 'female') return patient.gender.toLowerCase() === 'female';
         return true;
@@ -91,7 +91,6 @@ const PatientList = () => {
 
       {error && <Alert variant="danger">{error}</Alert>}
 
-      {/* Search and Filter Toolbar */}
       <div className="hoverable-toolbar mb-4">
         <div className="d-flex flex-wrap w-100 align-items-center">
           <div className="me-3 mb-2 mb-md-0 flex-grow-1">
@@ -142,7 +141,7 @@ const PatientList = () => {
         </div>
       </div>
 
-      {filteredPatients.length === 0 ? (
+      {!filteredPatients || filteredPatients.length === 0 ? (
         <Alert variant="info">
           {searchTerm 
             ? `No patients found matching "${searchTerm}". Try a different search term.` 
@@ -151,15 +150,15 @@ const PatientList = () => {
       ) : (
         <Row>
           {filteredPatients.map(patient => (
-            <Col key={patient.id} md={6} lg={4} className="mb-4">
+            <Col key={patient?.id || 'unknown'} md={6} lg={4} className="mb-4">
               <Card className="patient-card h-100">
                 <Card.Body className="d-flex flex-column">
                   <div className="patient-info">
-                    {patient.profileImageUrl ? (
+                    {patient?.profileImageUrl ? (
                       <div className="patient-avatar mb-3">
                         <img 
                           src={patient.profileImageUrl} 
-                          alt={`${patient.firstName} ${patient.lastName}`}
+                          alt={`${patient?.firstName || ''} ${patient?.lastName || ''}`}
                           className="rounded-circle"
                           width="50"
                           height="50"
@@ -168,30 +167,30 @@ const PatientList = () => {
                     ) : (
                       <div className="patient-avatar mb-3">
                         <div className="avatar-placeholder">
-                          {patient.firstName.charAt(0)}{patient.lastName.charAt(0)}
+                          {(patient?.firstName || '').charAt(0)}{(patient?.lastName || '').charAt(0)}
                         </div>
                       </div>
                     )}
-                    <Card.Title className="mb-3">{patient.firstName} {patient.lastName}</Card.Title>
+                    <Card.Title className="mb-3">{patient?.firstName || ''} {patient?.lastName || ''}</Card.Title>
                     <Card.Text className="mb-1">
-                      <span className="text-muted me-2">📧</span> {patient.email}
+                      <span className="text-muted me-2">📧</span> {patient?.email || 'No email'}
                     </Card.Text>
                     <Card.Text className="mb-1">
-                      <span className="text-muted me-2">📞</span> {patient.phone}
+                      <span className="text-muted me-2">📞</span> {patient?.phone || 'No phone'}
                     </Card.Text>
                     <Card.Text className="mb-3">
-                      <span className="text-muted me-2">⚥</span> {patient.gender}
+                      <span className="text-muted me-2">⚥</span> {patient?.gender || 'Unknown'}
                     </Card.Text>
                   </div>
                   
                   <div className="patient-actions mt-auto">
                     <div className="d-flex justify-content-between">
-                      <Link to={`/patients/${patient.id}`}>
+                      <Link to={`/patients/${patient?.id || ''}`}>
                         <Button variant="primary" size="sm">
                           <span className="tool-icon">👁️</span> View
                         </Button>
                       </Link>
-                      <Link to={`/patients/${patient.id}/edit`}>
+                      <Link to={`/patients/${patient?.id || ''}/edit`}>
                         <Button variant="warning" size="sm">
                           <span className="tool-icon">✏️</span> Edit
                         </Button>
@@ -199,7 +198,7 @@ const PatientList = () => {
                       <Button 
                         variant="danger" 
                         size="sm" 
-                        onClick={() => handleDelete(patient.id)}
+                        onClick={() => handleDelete(patient?.id || '')}
                       >
                         <span className="tool-icon">🗑️</span> Delete
                       </Button>

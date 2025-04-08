@@ -22,14 +22,18 @@ const MedicationList = () => {
     try {
       setLoading(true);
       const response = await getMedications(currentPage, perPage);
-      setMedications(response.data);
-      setFilteredMedications(response.data);
-      setTotalPages(response.pagination.total_pages);
-      setTotalMedications(response.pagination.total);
+      // Add null checks for response data
+      setMedications(response?.data || []);
+      setFilteredMedications(response?.data || []);
+      setTotalPages(response?.pagination?.total_pages || 1);
+      setTotalMedications(response?.pagination?.total || 0);
       setError(null);
     } catch (err) {
+      console.error('Error fetching medications:', err);
       setError('Failed to fetch medications');
-      console.error(err);
+      // Initialize with empty arrays to prevent undefined errors
+      setMedications([]);
+      setFilteredMedications([]);
     } finally {
       setLoading(false);
     }
@@ -41,35 +45,39 @@ const MedicationList = () => {
 
   useEffect(() => {
     // Filter medications based on search term
-    if (searchTerm) {
+    if (searchTerm && medications && medications.length > 0) {
       const term = searchTerm.toLowerCase();
       const result = medications.filter(medication => 
-        medication.name.toLowerCase().includes(term) ||
-        medication.dosage.toLowerCase().includes(term) ||
-        medication.frequency.toLowerCase().includes(term)
+        medication && 
+        ((medication?.name || '').toLowerCase().includes(term) ||
+        (medication?.dosage || '').toLowerCase().includes(term) ||
+        (medication?.frequency || '').toLowerCase().includes(term))
       );
       setFilteredMedications(result);
     } else {
-      setFilteredMedications(medications);
+      setFilteredMedications(medications || []);
     }
   }, [searchTerm, medications]);
 
   const handleDelete = async (id: string) => {
+    if (!id) return;
+    
     if (window.confirm('Are you sure you want to delete this medication?')) {
       try {
         await deleteMedication(id);
-        fetchMedications(); // Refresh the list after deletion
+        // Refresh the list after deletion
+        fetchMedications();
       } catch (err) {
+        console.error('Error deleting medication:', err);
         setError('Failed to delete medication');
-        console.error(err);
       }
     }
   };
-  
+
   const handlePageChange = (page: number) => {
     setCurrentPage(page);
   };
-  
+
   const handlePerPageChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
     setPerPage(Number(e.target.value));
     setCurrentPage(1); // Reset to first page when changing items per page
@@ -140,7 +148,7 @@ const MedicationList = () => {
         </div>
       </div>
 
-      {filteredMedications.length === 0 ? (
+      {filteredMedications && filteredMedications.length === 0 ? (
         <Alert variant="info">
           {searchTerm 
             ? `No medications found matching "${searchTerm}". Try a different search term.` 
@@ -148,7 +156,7 @@ const MedicationList = () => {
         </Alert>
       ) : (
         <Row>
-          {filteredMedications.map(medication => (
+          {filteredMedications && filteredMedications.map(medication => (
             <Col key={medication.id} md={6} lg={4} className="mb-4">
               <Card className="h-100">
                 <Card.Body className="d-flex flex-column">
@@ -206,7 +214,7 @@ const MedicationList = () => {
       {/* Pagination */}
       <div className="d-flex justify-content-between align-items-center mt-4">
         <div>
-          Showing {filteredMedications.length} of {totalMedications} medications
+          Showing {(filteredMedications || []).length} of {totalMedications} medications
         </div>
         <div>
           <Pagination>

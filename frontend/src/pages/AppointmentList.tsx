@@ -23,14 +23,18 @@ const AppointmentList = () => {
     try {
       setLoading(true);
       const response = await getAppointments(currentPage, perPage);
-      setAppointments(response.data);
-      setFilteredAppointments(response.data);
-      setTotalPages(response.pagination.total_pages);
-      setTotalAppointments(response.pagination.total);
+      // Add null checks for response data
+      setAppointments(response?.data || []);
+      setFilteredAppointments(response?.data || []);
+      setTotalPages(response?.pagination?.total_pages || 1);
+      setTotalAppointments(response?.pagination?.total || 0);
       setError(null);
     } catch (err) {
+      console.error('Error fetching appointments:', err);
       setError('Failed to fetch appointments');
-      console.error(err);
+      // Initialize with empty arrays to prevent undefined errors
+      setAppointments([]);
+      setFilteredAppointments([]);
     } finally {
       setLoading(false);
     }
@@ -42,38 +46,52 @@ const AppointmentList = () => {
 
   useEffect(() => {
     // Filter appointments based on search term and active filter
-    let result = appointments;
+    let result = appointments || [];
     
     // Apply search filter
-    if (searchTerm) {
+    if (searchTerm && result.length > 0) {
       const term = searchTerm.toLowerCase();
       result = result.filter(appointment => 
-        appointment.reason.toLowerCase().includes(term) ||
-        appointment.appointmentDate.includes(term) ||
-        appointment.status.toLowerCase().includes(term)
+        appointment && 
+        ((appointment?.reason || '').toLowerCase().includes(term) ||
+        (appointment?.appointmentDate || '').includes(term) ||
+        (appointment?.status || '').toLowerCase().includes(term))
       );
     }
     
     // Apply status filter
-    if (activeFilter !== 'all') {
+    if (activeFilter !== 'all' && result.length > 0) {
       result = result.filter(appointment => {
+        if (!appointment || !appointment.status) return false;
         return appointment.status.toLowerCase() === activeFilter.toLowerCase();
       });
     }
     
     setFilteredAppointments(result);
-  }, [appointments, searchTerm, activeFilter]);
+  }, [searchTerm, activeFilter, appointments]);
 
   const handleDelete = async (id: string) => {
-    if (window.confirm('Are you sure you want to delete this appointment?')) {
+    if (!id) return;
+    
+    if (window.confirm('Are you sure you want to cancel this appointment?')) {
       try {
         await deleteAppointment(id);
-        fetchAppointments(); // Refresh the list after deletion
+        // Refresh the list after deletion
+        fetchAppointments();
       } catch (err) {
-        setError('Failed to delete appointment');
-        console.error(err);
+        console.error('Error deleting appointment:', err);
+        setError('Failed to cancel appointment');
       }
     }
+  };
+
+  const handlePageChange = (page: number) => {
+    setCurrentPage(page);
+  };
+
+  const handlePerPageChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
+    setPerPage(Number(e.target.value));
+    setCurrentPage(1); // Reset to first page when changing items per page
   };
 
   const handleSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -82,15 +100,6 @@ const AppointmentList = () => {
 
   const handleFilterChange = (filter: string) => {
     setActiveFilter(filter);
-  };
-  
-  const handlePageChange = (page: number) => {
-    setCurrentPage(page);
-  };
-  
-  const handlePerPageChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
-    setPerPage(Number(e.target.value));
-    setCurrentPage(1); // Reset to first page when changing items per page
   };
 
   // Generate pagination items

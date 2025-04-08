@@ -94,13 +94,13 @@ const Login: React.FC = () => {
                   </Button>
                 </div>
                 
-                {process.env.NODE_ENV === 'development' && (
+                {/*process.env.NODE_ENV === 'development' && (
                   <div className="mt-3 text-center">
                     <small className="text-muted">
-                      Development mode: Use "doctor" or "admin" as username (any password)
+                       Development mode: Use "doctor" or "admin" as username (any password)
                     </small>
                   </div>
-                )}
+                )*/}
               </Form>
             </Card.Body>
           </Card>

@@ -15,12 +15,16 @@ const MedicalRecordList = () => {
     try {
       setLoading(true);
       const response = await getMedicalRecords();
-      setMedicalRecords(response.data);
-      setFilteredRecords(response.data);
+      // Add null checks for response data
+      setMedicalRecords(response?.data || []);
+      setFilteredRecords(response?.data || []);
       setError(null);
     } catch (err) {
+      console.error('Error fetching medical records:', err);
       setError('Failed to fetch medical records');
-      console.error(err);
+      // Initialize with empty arrays to prevent undefined errors
+      setMedicalRecords([]);
+      setFilteredRecords([]);
     } finally {
       setLoading(false);
     }
@@ -32,27 +36,31 @@ const MedicalRecordList = () => {
 
   useEffect(() => {
     // Filter medical records based on search term
-    if (searchTerm) {
+    if (searchTerm && medicalRecords && medicalRecords.length > 0) {
       const term = searchTerm.toLowerCase();
       const result = medicalRecords.filter(record => 
-        record.chiefComplaint.toLowerCase().includes(term) ||
-        record.diagnosis.toLowerCase().includes(term) ||
-        record.visitDate.includes(term)
+        record && 
+        ((record?.chiefComplaint || '').toLowerCase().includes(term) ||
+        (record?.diagnosis || '').toLowerCase().includes(term) ||
+        (record?.visitDate || '').includes(term))
       );
       setFilteredRecords(result);
     } else {
-      setFilteredRecords(medicalRecords);
+      setFilteredRecords(medicalRecords || []);
     }
   }, [searchTerm, medicalRecords]);
 
   const handleDelete = async (id: string) => {
+    if (!id) return;
+    
     if (window.confirm('Are you sure you want to delete this medical record?')) {
       try {
         await deleteMedicalRecord(id);
-        setMedicalRecords(medicalRecords.filter(record => record.id !== id));
+        // Refresh the list after deletion
+        fetchMedicalRecords();
       } catch (err) {
+        console.error('Error deleting medical record:', err);
         setError('Failed to delete medical record');
-        console.error(err);
       }
     }
   };
@@ -108,7 +116,7 @@ const MedicalRecordList = () => {
         </div>
       </div>
 
-      {filteredRecords.length === 0 ? (
+      {(filteredRecords || []).length === 0 ? (
         <Alert variant="info">
           {searchTerm 
             ? `No medical records found matching "${searchTerm}". Try a different search term.` 
@@ -116,7 +124,7 @@ const MedicalRecordList = () => {
         </Alert>
       ) : (
         <Row>
-          {filteredRecords.map(record => (
+          {(filteredRecords || []).map(record => (
             <Col key={record.id} md={6} lg={4} className="mb-4">
               <Card className="h-100">
                 <Card.Body className="d-flex flex-column">
