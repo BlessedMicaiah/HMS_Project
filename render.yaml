@@ -19,6 +19,7 @@ services:
         value: hms-patient-images
       - key: S3_REGION
         value: us-east-1
+    preDeployCommand: cd backend/patient-service && python init_db.py
 
   # API Gateway (Node.js)
   - type: web
