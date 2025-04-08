@@ -22,11 +22,16 @@ services:
         value: production
       - key: PORT
         value: 3000
-      - key: PATIENT_SERVICE_URL
+      - key: PATIENT_SERVICE_HOST
         fromService:
           name: hms-patient-service
           type: web
-          property: url
+          property: host
+      - key: PATIENT_SERVICE_PORT
+        fromService:
+          name: hms-patient-service
+          type: web
+          property: port
 
   # Frontend (React)
   - type: web
@@ -35,8 +40,13 @@ services:
     buildCommand: cd frontend && npm install && npm run build
     staticPublishPath: frontend/build
     envVars:
-      - key: REACT_APP_API_GATEWAY_URL
+      - key: REACT_APP_API_GATEWAY_HOST
         fromService:
           name: hms-api-gateway
           type: web
-          property: url
+          property: host
+      - key: REACT_APP_API_GATEWAY_PORT
+        fromService:
+          name: hms-api-gateway
+          type: web
+          property: port
