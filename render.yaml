@@ -11,6 +11,14 @@ services:
         value: production
       - key: PORT
         value: 8080
+      - key: DATABASE_URL
+        fromDatabase:
+          name: hms-db
+          property: connectionString
+      - key: S3_BUCKET
+        value: hms-patient-images
+      - key: S3_REGION
+        value: us-east-1
 
   # API Gateway (Node.js)
   - type: web
@@ -52,3 +60,10 @@ services:
           name: hms-api-gateway
           type: web
           property: port
+
+# Database
+databases:
+  - name: hms-db
+    plan: free
+    databaseName: hms_production
+    user: hms_user
