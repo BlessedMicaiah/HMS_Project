@@ -1175,7 +1175,43 @@ if __name__ == '__main__':
     # Create database tables if they don't exist
     with app.app_context():
         db.create_all()
+        
+        # Check if admin user already exists and create test users if needed
+        admin_exists = User.query.filter_by(username='admin').first() is not None
+        
+        if not admin_exists:
+            print("Creating admin user...")
+            admin_user = User(
+                id=str(uuid.uuid4()),
+                username='admin',
+                password='password123',  # In a real app, this would be hashed
+                firstName='Admin',
+                lastName='User',
+                email='admin@example.com',
+                role='ADMIN'
+            )
+            db.session.add(admin_user)
+            
+            # Create a test doctor user
+            doctor_user = User(
+                id=str(uuid.uuid4()),
+                username='doctor',
+                password='password123',  # In a real app, this would be hashed
+                firstName='John',
+                lastName='Smith',
+                email='doctor@example.com',
+                role='DOCTOR'
+            )
+            db.session.add(doctor_user)
+            
+            # Commit the changes
+            db.session.commit()
+            print("Test users created successfully!")
+        else:
+            print("Admin user already exists, skipping user creation.")
+        
         print("Database tables created successfully!")
     
+    # Run the Flask app
     port = int(os.environ.get('PORT', 3001))
     app.run(host='0.0.0.0', port=port, debug=True)
