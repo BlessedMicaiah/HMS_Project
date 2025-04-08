@@ -36,23 +36,45 @@ const Dashboard: React.FC = () => {
         setError(null);
         
         // Fetch all required data with pagination (just first page for dashboard)
-        const patientResponse = await getPatients(1, 5);
-        const appointmentResponse = await getAppointments(1, 5);
-        const medicationResponse = await getMedications(1, 5);
-        const medicalRecordResponse = await getMedicalRecords(1, 5);
+        try {
+          const patientResponse = await getPatients(1, 5);
+          setPatients(patientResponse?.data || []);
+          setPatientsTotal(patientResponse?.pagination?.total || 0);
+        } catch (err) {
+          console.error('Error fetching patients:', err);
+          setPatients([]);
+          setPatientsTotal(0);
+        }
         
-        // Extract data arrays and totals from paginated responses
-        setPatients(patientResponse.data);
-        setPatientsTotal(patientResponse.pagination.total);
+        try {
+          const appointmentResponse = await getAppointments(1, 5);
+          setAppointments(appointmentResponse?.data || []);
+          setAppointmentsTotal(appointmentResponse?.pagination?.total || 0);
+        } catch (err) {
+          console.error('Error fetching appointments:', err);
+          setAppointments([]);
+          setAppointmentsTotal(0);
+        }
         
-        setAppointments(appointmentResponse.data);
-        setAppointmentsTotal(appointmentResponse.pagination.total);
+        try {
+          const medicationResponse = await getMedications(1, 5);
+          setMedications(medicationResponse?.data || []);
+          setMedicationsTotal(medicationResponse?.pagination?.total || 0);
+        } catch (err) {
+          console.error('Error fetching medications:', err);
+          setMedications([]);
+          setMedicationsTotal(0);
+        }
         
-        setMedications(medicationResponse.data);
-        setMedicationsTotal(medicationResponse.pagination.total);
-        
-        setMedicalRecords(medicalRecordResponse.data);
-        setMedicalRecordsTotal(medicalRecordResponse.pagination.total);
+        try {
+          const medicalRecordResponse = await getMedicalRecords(1, 5);
+          setMedicalRecords(medicalRecordResponse?.data || []);
+          setMedicalRecordsTotal(medicalRecordResponse?.pagination?.total || 0);
+        } catch (err) {
+          console.error('Error fetching medical records:', err);
+          setMedicalRecords([]);
+          setMedicalRecordsTotal(0);
+        }
       } catch (err) {
         console.error('Error fetching dashboard data:', err);
         setError('Failed to load dashboard data. Please try again later.');
@@ -121,7 +143,7 @@ const Dashboard: React.FC = () => {
   const TodaysAppointments = () => {
     const today = new Date().toISOString().split('T')[0];
     const todaysAppointments = appointments.filter(
-      appointment => appointment.appointmentDate === today
+      appointment => appointment?.appointmentDate === today
     ).sort((a, b) => a.startTime.localeCompare(b.startTime));
     
     return (
@@ -136,12 +158,12 @@ const Dashboard: React.FC = () => {
           ) : (
             <ListGroup variant="flush">
               {todaysAppointments.slice(0, 5).map(appointment => {
-                const patient = patients.find(p => p.id === appointment.patientId);
+                const patient = patients.find(p => p?.id === appointment?.patientId);
                 return (
                   <ListGroup.Item key={appointment.id} className="d-flex justify-content-between align-items-center">
                     <div>
                       <div className="fw-bold">
-                        {appointment.startTime} - {appointment.endTime}
+                        {appointment?.startTime} - {appointment?.endTime}
                       </div>
                       <div>
                         {patient ? `${patient.firstName} ${patient.lastName}` : 'Unknown Patient'}
@@ -149,12 +171,12 @@ const Dashboard: React.FC = () => {
                     </div>
                     <div>
                       <Badge bg={
-                        appointment.status === 'SCHEDULED' ? 'primary' :
-                        appointment.status === 'CONFIRMED' ? 'success' :
-                        appointment.status === 'CANCELLED' ? 'danger' :
-                        appointment.status === 'COMPLETED' ? 'info' : 'secondary'
+                        appointment?.status === 'SCHEDULED' ? 'primary' :
+                        appointment?.status === 'CONFIRMED' ? 'success' :
+                        appointment?.status === 'CANCELLED' ? 'danger' :
+                        appointment?.status === 'COMPLETED' ? 'info' : 'secondary'
                       }>
-                        {appointment.status}
+                        {appointment?.status || 'UNKNOWN'}
                       </Badge>
                     </div>
                   </ListGroup.Item>
@@ -172,10 +194,12 @@ const Dashboard: React.FC = () => {
     // Sort patients alphabetically by last name and first name instead of creation date
     const sortedPatients = [...patients].sort((a, b) => {
       // First sort by last name
+      if (!a.lastName || !b.lastName) return 0;
       const lastNameComparison = a.lastName.localeCompare(b.lastName);
       
       // If last names are the same, sort by first name
       if (lastNameComparison === 0) {
+        if (!a.firstName || !b.firstName) return 0;
         return a.firstName.localeCompare(b.firstName);
       }
       
@@ -196,8 +220,8 @@ const Dashboard: React.FC = () => {
               {sortedPatients.slice(0, 5).map(patient => (
                 <ListGroup.Item key={patient.id} className="d-flex justify-content-between align-items-center">
                   <div>
-                    <div className="fw-bold">{patient.firstName} {patient.lastName}</div>
-                    <div className="text-muted">{patient.dateOfBirth} • {patient.gender}</div>
+                    <div className="fw-bold">{patient?.firstName || ''} {patient?.lastName || ''}</div>
+                    <div className="text-muted">{patient?.dateOfBirth || 'Unknown DOB'} • {patient?.gender || 'Unknown'}</div>
                   </div>
                   <Link to={`/patients/${patient.id}`} className="btn btn-sm btn-outline-primary">
                     View
@@ -216,6 +240,7 @@ const Dashboard: React.FC = () => {
     // Sort records by visit date instead of creation date
     const sortedRecords = [...medicalRecords].sort((a, b) => {
       // Sort by visit date, most recent first
+      if (!a.visitDate || !b.visitDate) return 0;
       return new Date(b.visitDate).getTime() - new Date(a.visitDate).getTime();
     });
     
@@ -231,14 +256,14 @@ const Dashboard: React.FC = () => {
           ) : (
             <ListGroup variant="flush">
               {sortedRecords.slice(0, 5).map(record => {
-                const patient = patients.find(p => p.id === record.patientId);
+                const patient = patients.find(p => p?.id === record?.patientId);
                 return (
                   <ListGroup.Item key={record.id}>
                     <div className="d-flex justify-content-between">
                       <div className="fw-bold">{patient ? `${patient.firstName} ${patient.lastName}` : 'Unknown Patient'}</div>
-                      <div className="text-muted">{record.visitDate}</div>
+                      <div className="text-muted">{record?.visitDate || 'Unknown Date'}</div>
                     </div>
-                    <div className="text-truncate">{record.diagnosis}</div>
+                    <div className="text-truncate">{record?.diagnosis || 'No diagnosis'}</div>
                   </ListGroup.Item>
                 );
               })}
@@ -258,8 +283,8 @@ const Dashboard: React.FC = () => {
             <div className="icon-wrapper bg-light rounded-circle mb-2 mx-auto">
               <i className="bi bi-people fs-3 text-primary"></i>
             </div>
-            <h2 className="fw-bold">{patients.length}</h2>
-            <Card.Text>Total Patients ({patientsTotal})</Card.Text>
+            <h2 className="fw-bold">{patients?.length || 0}</h2>
+            <Card.Text>Total Patients ({patientsTotal || 0})</Card.Text>
           </Card.Body>
         </Card>
       </Col>
@@ -269,8 +294,8 @@ const Dashboard: React.FC = () => {
             <div className="icon-wrapper bg-light rounded-circle mb-2 mx-auto">
               <i className="bi bi-calendar-check fs-3 text-success"></i>
             </div>
-            <h2 className="fw-bold">{appointments.length}</h2>
-            <Card.Text>Active Appointments ({appointmentsTotal})</Card.Text>
+            <h2 className="fw-bold">{appointments?.length || 0}</h2>
+            <Card.Text>Active Appointments ({appointmentsTotal || 0})</Card.Text>
           </Card.Body>
         </Card>
       </Col>
@@ -280,8 +305,8 @@ const Dashboard: React.FC = () => {
             <div className="icon-wrapper bg-light rounded-circle mb-2 mx-auto">
               <i className="bi bi-capsule fs-3 text-info"></i>
             </div>
-            <h2 className="fw-bold">{medications.length}</h2>
-            <Card.Text>Active Medications ({medicationsTotal})</Card.Text>
+            <h2 className="fw-bold">{medications?.length || 0}</h2>
+            <Card.Text>Active Medications ({medicationsTotal || 0})</Card.Text>
           </Card.Body>
         </Card>
       </Col>
@@ -291,8 +316,8 @@ const Dashboard: React.FC = () => {
             <div className="icon-wrapper bg-light rounded-circle mb-2 mx-auto">
               <i className="bi bi-file-earmark-medical fs-3 text-warning"></i>
             </div>
-            <h2 className="fw-bold">{medicalRecords.length}</h2>
-            <Card.Text>Medical Records ({medicalRecordsTotal})</Card.Text>
+            <h2 className="fw-bold">{medicalRecords?.length || 0}</h2>
+            <Card.Text>Medical Records ({medicalRecordsTotal || 0})</Card.Text>
           </Card.Body>
         </Card>
       </Col>
