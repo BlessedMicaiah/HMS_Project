@@ -21,7 +21,7 @@ const MOCK_USERS = {
     lastName: 'Smith',
     email: 'doctor@example.com',
     role: 'DOCTOR',
-    permissions: ['read', 'write']
+    permissions: ['read', 'write', 'delete']
   }
 };
 

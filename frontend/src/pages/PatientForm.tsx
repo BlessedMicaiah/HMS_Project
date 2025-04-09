@@ -26,7 +26,7 @@ const PatientForm = () => {
     allergies: [],
     notes: '',
     profileImageUrl: '',
-    createdBy: currentUser?.id
+    createdBy: currentUser?.id || ''
   });
   
   // UI state
@@ -91,9 +91,14 @@ const PatientForm = () => {
     }
     
     if (name === 'medicalConditions' || name === 'allergies') {
+      // Split by commas, trim whitespace, and filter out empty strings
+      const items = value.split(',')
+        .map(item => item.trim())
+        .filter(item => item !== '');
+      
       setFormData(prevData => ({
         ...prevData,
-        [name]: value.trim() === '' ? [] : value.split(',').map(item => item.trim()).filter(item => item !== '')
+        [name]: items
       }));
     } else {
       setFormData(prevData => ({
@@ -156,6 +161,12 @@ const PatientForm = () => {
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     
+    // Only process form submission when on the final step
+    if (currentStep < totalSteps) {
+      handleNextStep();
+      return;
+    }
+    
     const form = e.currentTarget;
     if (!form.checkValidity()) {
       e.stopPropagation();
@@ -166,28 +177,47 @@ const PatientForm = () => {
     try {
       setLoading(true);
       setSavingAnimation(true);
+      setError(null); // Clear any previous errors
+      
+      // Make sure we have a current user
+      if (!currentUser) {
+        setError('You must be logged in to create or update a patient');
+        setSavingAnimation(false);
+        setLoading(false);
+        return;
+      }
       
       // Prepare the data, include the image if needed
       let patientData = { ...formData };
       
-      // Always ensure we set the createdBy field to the current user's ID when creating a new patient
-      if (!isEditMode && currentUser) {
-        patientData.createdBy = currentUser.id;
-      }
+      // Always ensure we set the createdBy field to the current user's ID
+      patientData.createdBy = currentUser.id;
       
-      if (isEditMode) {
-        await updatePatient(id!, patientData);
-      } else {
-        await createPatient(patientData);
-      }
+      console.log('Submitting patient data:', patientData);
       
-      // Delay navigation slightly to show the saving animation
-      setTimeout(() => {
-        navigate('/patients');
-      }, 500);
-    } catch (err) {
-      setError(`Failed to ${isEditMode ? 'update' : 'create'} patient`);
-      console.error(err);
+      // For development mode, use a fallback if the API call fails
+      try {
+        if (isEditMode && id) {
+          console.log(`Updating patient with ID: ${id}`);
+          await updatePatient(id, patientData);
+        } else {
+          console.log('Creating new patient');
+          await createPatient(patientData);
+        }
+        
+        // Delay navigation slightly to show the saving animation
+        setTimeout(() => {
+          navigate('/patients');
+        }, 500);
+      } catch (apiError: any) {
+        console.error('API error:', apiError);
+        setError(apiError.message || `Failed to ${isEditMode ? 'update' : 'create'} patient`);
+        setSavingAnimation(false);
+      }
+    } catch (err: any) {
+      const errorMessage = err.message || `Failed to ${isEditMode ? 'update' : 'create'} patient`;
+      setError(errorMessage);
+      console.error('Form submission error:', err);
       setSavingAnimation(false);
     } finally {
       setLoading(false);
@@ -414,27 +444,39 @@ const PatientForm = () => {
             </Form.Group>
             
             <Form.Group className="mb-3">
-              <Form.Label>Medical Conditions (comma-separated)</Form.Label>
+              <Form.Label>Medical Conditions</Form.Label>
               <Form.Control
                 as="textarea"
                 rows={3}
                 name="medicalConditions"
-                value={Array.isArray(formData.medicalConditions) ? formData.medicalConditions.join(', ') : ''}
+                value={Array.isArray(formData.medicalConditions) 
+                  ? formData.medicalConditions.join(', ') 
+                  : formData.medicalConditions || ''}
                 onChange={handleChange}
                 disabled={!canEditMedicalInfo}
+                placeholder="Enter medical conditions separated by commas (e.g., Diabetes, Hypertension, Asthma)"
               />
+              <Form.Text className="text-muted">
+                List all medical conditions separated by commas.
+              </Form.Text>
             </Form.Group>
             
             <Form.Group className="mb-3">
-              <Form.Label>Allergies (comma-separated)</Form.Label>
+              <Form.Label>Allergies</Form.Label>
               <Form.Control
                 as="textarea"
                 rows={3}
                 name="allergies"
-                value={Array.isArray(formData.allergies) ? formData.allergies.join(', ') : ''}
+                value={Array.isArray(formData.allergies) 
+                  ? formData.allergies.join(', ') 
+                  : formData.allergies || ''}
                 onChange={handleChange}
                 disabled={!canEditMedicalInfo}
+                placeholder="Enter allergies separated by commas (e.g., Penicillin, Peanuts, Shellfish)"
               />
+              <Form.Text className="text-muted">
+                List all allergies separated by commas.
+              </Form.Text>
             </Form.Group>
             
             <Form.Group className="mb-3">
@@ -517,27 +559,39 @@ const PatientForm = () => {
                     </Form.Group>
                     
                     <Form.Group className="mb-3">
-                      <Form.Label>Medical Conditions (comma-separated)</Form.Label>
+                      <Form.Label>Medical Conditions</Form.Label>
                       <Form.Control
                         as="textarea"
                         rows={3}
                         name="medicalConditions"
-                        value={Array.isArray(formData.medicalConditions) ? formData.medicalConditions.join(', ') : ''}
+                        value={Array.isArray(formData.medicalConditions) 
+                          ? formData.medicalConditions.join(', ') 
+                          : formData.medicalConditions || ''}
                         onChange={handleChange}
                         disabled={!canEditMedicalInfo}
+                        placeholder="Enter medical conditions separated by commas (e.g., Diabetes, Hypertension, Asthma)"
                       />
+                      <Form.Text className="text-muted">
+                        List all medical conditions separated by commas.
+                      </Form.Text>
                     </Form.Group>
                     
                     <Form.Group className="mb-3">
-                      <Form.Label>Allergies (comma-separated)</Form.Label>
+                      <Form.Label>Allergies</Form.Label>
                       <Form.Control
                         as="textarea"
                         rows={3}
                         name="allergies"
-                        value={Array.isArray(formData.allergies) ? formData.allergies.join(', ') : ''}
+                        value={Array.isArray(formData.allergies) 
+                          ? formData.allergies.join(', ') 
+                          : formData.allergies || ''}
                         onChange={handleChange}
                         disabled={!canEditMedicalInfo}
+                        placeholder="Enter allergies separated by commas (e.g., Penicillin, Peanuts, Shellfish)"
                       />
+                      <Form.Text className="text-muted">
+                        List all allergies separated by commas.
+                      </Form.Text>
                     </Form.Group>
                     
                     <Form.Group className="mb-3">

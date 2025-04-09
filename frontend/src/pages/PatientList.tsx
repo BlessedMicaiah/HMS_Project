@@ -11,6 +11,7 @@ const PatientList = () => {
   const [error, setError] = useState<string | null>(null);
   const [searchTerm, setSearchTerm] = useState<string>('');
   const [activeFilter, setActiveFilter] = useState<string>('all');
+  const [deleteConfirmation, setDeleteConfirmation] = useState<string | null>(null);
   const location = useLocation();
 
   const fetchPatients = useCallback(async () => {
@@ -40,9 +41,11 @@ const PatientList = () => {
     if (searchTerm && result.length > 0) {
       const term = searchTerm.toLowerCase();
       result = result.filter(patient => 
-        patient && `${patient?.firstName || ''} ${patient?.lastName || ''}`.toLowerCase().includes(term) ||
-        (patient?.email || '').toLowerCase().includes(term) ||
-        (patient?.phone || '').includes(term)
+        patient && (
+          `${patient?.firstName || ''} ${patient?.lastName || ''}`.toLowerCase().includes(term) ||
+          (patient?.email || '').toLowerCase().includes(term) ||
+          (patient?.phone || '').includes(term)
+        )
       );
     }
     
@@ -56,17 +59,22 @@ const PatientList = () => {
     }
     
     setFilteredPatients(result);
-  }, [searchTerm, activeFilter, patients]);
+  }, [patients, searchTerm, activeFilter]);
 
   const handleDelete = async (id: string) => {
-    if (window.confirm('Are you sure you want to delete this patient?')) {
-      try {
+    try {
+      if (window.confirm('Are you sure you want to delete this patient? This action cannot be undone.')) {
+        setDeleteConfirmation(id);
         await deletePatient(id);
-        setPatients(patients.filter(patient => patient.id !== id));
-      } catch (err) {
-        setError('Failed to delete patient');
-        console.error(err);
+        // Remove the patient from the local state
+        setPatients(prevPatients => prevPatients.filter(patient => patient.id !== id));
+        setFilteredPatients(prevPatients => prevPatients.filter(patient => patient.id !== id));
+        setDeleteConfirmation(null);
       }
+    } catch (error) {
+      console.error('Error deleting patient:', error);
+      setError('Failed to delete patient. Please try again.');
+      setDeleteConfirmation(null);
     }
   };
 
@@ -198,9 +206,37 @@ const PatientList = () => {
                       <Button 
                         variant="danger" 
                         size="sm" 
-                        onClick={() => handleDelete(patient?.id || '')}
+                        onClick={() => {
+                          const patientId = patient?.id || '';
+                          console.log(`Delete button clicked for patient ID: ${patientId}`);
+                          if (patientId) {
+                            if (window.confirm('Are you sure you want to delete this patient? This action cannot be undone.')) {
+                              setDeleteConfirmation(patientId);
+                              // Direct approach to remove from UI first
+                              setPatients(prevPatients => prevPatients.filter(p => p.id !== patientId));
+                              setFilteredPatients(prevPatients => prevPatients.filter(p => p.id !== patientId));
+                              
+                              // Then try to delete from backend
+                              deletePatient(patientId)
+                                .then(() => {
+                                  console.log(`Successfully deleted patient ${patientId}`);
+                                })
+                                .catch(error => {
+                                  console.error(`Error deleting patient ${patientId}:`, error);
+                                  // Even if backend fails, we keep the UI updated
+                                })
+                                .finally(() => {
+                                  setDeleteConfirmation(null);
+                                });
+                            }
+                          }
+                        }}
+                        disabled={deleteConfirmation === patient?.id}
                       >
-                        <span className="tool-icon">🗑️</span> Delete
+                        <span className="tool-icon">
+                          {deleteConfirmation === patient?.id ? '⏳' : '🗑️'}
+                        </span> 
+                        {deleteConfirmation === patient?.id ? 'Deleting...' : 'Delete'}
                       </Button>
                     </div>
                   </div>

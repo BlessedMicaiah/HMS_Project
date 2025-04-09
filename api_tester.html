@@ -1,0 +1,446 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>HMS API Tester</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+            line-height: 1.6;
+        }
+        h1, h2, h3 {
+            color: #2c3e50;
+        }
+        .container {
+            margin-bottom: 30px;
+        }
+        .test-section {
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            padding: 15px;
+            margin-bottom: 20px;
+            background-color: #f9f9f9;
+        }
+        .test-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 10px;
+        }
+        .test-title {
+            font-size: 18px;
+            font-weight: bold;
+            margin: 0;
+        }
+        .test-status {
+            padding: 5px 10px;
+            border-radius: 3px;
+            font-weight: bold;
+        }
+        .success {
+            background-color: #d4edda;
+            color: #155724;
+        }
+        .failure {
+            background-color: #f8d7da;
+            color: #721c24;
+        }
+        .pending {
+            background-color: #fff3cd;
+            color: #856404;
+        }
+        .response-container {
+            background-color: #f0f0f0;
+            border-radius: 5px;
+            padding: 10px;
+            margin-top: 10px;
+            font-family: monospace;
+            white-space: pre-wrap;
+            max-height: 300px;
+            overflow-y: auto;
+        }
+        button {
+            background-color: #4CAF50;
+            color: white;
+            border: none;
+            padding: 10px 15px;
+            text-align: center;
+            text-decoration: none;
+            display: inline-block;
+            font-size: 16px;
+            margin: 4px 2px;
+            cursor: pointer;
+            border-radius: 4px;
+        }
+        button:disabled {
+            background-color: #cccccc;
+            cursor: not-allowed;
+        }
+        .btn-container {
+            margin: 20px 0;
+        }
+    </style>
+</head>
+<body>
+    <h1>HMS API Tester</h1>
+    <p>Use this tool to test the Healthcare Management System API endpoints.</p>
+    
+    <div class="btn-container">
+        <button id="runAllTests">Run All Tests</button>
+        <button id="clearResults">Clear Results</button>
+    </div>
+    
+    <div class="container">
+        <h2>Test Results</h2>
+        
+        <!-- Public Test Endpoint -->
+        <div id="publicTest" class="test-section">
+            <div class="test-header">
+                <p class="test-title">Public Test Endpoint</p>
+                <span class="test-status pending">Pending</span>
+            </div>
+            <p>Tests if the public API endpoint is accessible.</p>
+            <div class="response-container" style="display: none;"></div>
+        </div>
+        
+        <!-- Health Check -->
+        <div id="healthCheck" class="test-section">
+            <div class="test-header">
+                <p class="test-title">Health Check</p>
+                <span class="test-status pending">Pending</span>
+            </div>
+            <p>Tests if the health check endpoint is accessible.</p>
+            <div class="response-container" style="display: none;"></div>
+        </div>
+        
+        <!-- Login -->
+        <div id="login" class="test-section">
+            <div class="test-header">
+                <p class="test-title">Login</p>
+                <span class="test-status pending">Pending</span>
+            </div>
+            <p>Tests user authentication.</p>
+            <div class="response-container" style="display: none;"></div>
+        </div>
+        
+        <!-- Get Patients -->
+        <div id="getPatients" class="test-section">
+            <div class="test-header">
+                <p class="test-title">Get Patients</p>
+                <span class="test-status pending">Pending</span>
+            </div>
+            <p>Tests retrieving the list of patients.</p>
+            <div class="response-container" style="display: none;"></div>
+        </div>
+        
+        <!-- Create Patient -->
+        <div id="createPatient" class="test-section">
+            <div class="test-header">
+                <p class="test-title">Create Patient</p>
+                <span class="test-status pending">Pending</span>
+            </div>
+            <p>Tests creating a new patient.</p>
+            <div class="response-container" style="display: none;"></div>
+        </div>
+        
+        <!-- Delete Patient -->
+        <div id="deletePatient" class="test-section">
+            <div class="test-header">
+                <p class="test-title">Delete Patient</p>
+                <span class="test-status pending">Pending</span>
+            </div>
+            <p>Tests deleting a patient.</p>
+            <div class="response-container" style="display: none;"></div>
+        </div>
+    </div>
+    
+    <script>
+        // Base URL for the API
+        const BASE_URL = 'http://localhost:3001/api';
+        
+        // Test user credentials
+        const TEST_USER = {
+            username: 'doctor',
+            password: 'password123'
+        };
+        
+        // Global variables
+        let userToken = null;
+        let testPatientId = null;
+        
+        // Utility function to update test status
+        function updateTestStatus(testId, status, response) {
+            const testSection = document.getElementById(testId);
+            const statusElement = testSection.querySelector('.test-status');
+            const responseContainer = testSection.querySelector('.response-container');
+            
+            // Update status
+            statusElement.className = `test-status ${status}`;
+            statusElement.textContent = status === 'success' ? 'Success' : status === 'failure' ? 'Failed' : 'Pending';
+            
+            // Update response
+            if (response) {
+                responseContainer.textContent = JSON.stringify(response, null, 2);
+                responseContainer.style.display = 'block';
+            }
+        }
+        
+        // Test functions
+        async function testPublicEndpoint() {
+            try {
+                const response = await fetch(`${BASE_URL}/public/test`);
+                const data = await response.json();
+                
+                updateTestStatus('publicTest', response.ok ? 'success' : 'failure', {
+                    status: response.status,
+                    data: data
+                });
+                
+                return response.ok;
+            } catch (error) {
+                updateTestStatus('publicTest', 'failure', {
+                    error: error.message
+                });
+                return false;
+            }
+        }
+        
+        async function testHealthCheck() {
+            try {
+                const response = await fetch('http://localhost:3001/health');
+                const data = await response.json();
+                
+                updateTestStatus('healthCheck', response.ok ? 'success' : 'failure', {
+                    status: response.status,
+                    data: data
+                });
+                
+                return response.ok;
+            } catch (error) {
+                updateTestStatus('healthCheck', 'failure', {
+                    error: error.message
+                });
+                return false;
+            }
+        }
+        
+        async function testLogin() {
+            try {
+                const response = await fetch(`${BASE_URL}/login`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(TEST_USER)
+                });
+                
+                const data = await response.json();
+                
+                updateTestStatus('login', response.ok ? 'success' : 'failure', {
+                    status: response.status,
+                    data: data
+                });
+                
+                if (response.ok && data.token) {
+                    userToken = data.token;
+                    return true;
+                }
+                return false;
+            } catch (error) {
+                updateTestStatus('login', 'failure', {
+                    error: error.message
+                });
+                return false;
+            }
+        }
+        
+        async function testGetPatients() {
+            try {
+                if (!userToken) {
+                    updateTestStatus('getPatients', 'failure', {
+                        error: 'No authentication token available'
+                    });
+                    return false;
+                }
+                
+                const response = await fetch(`${BASE_URL}/patients`, {
+                    headers: {
+                        'X-User-ID': userToken
+                    }
+                });
+                
+                const data = await response.json();
+                
+                updateTestStatus('getPatients', response.ok ? 'success' : 'failure', {
+                    status: response.status,
+                    data: data
+                });
+                
+                if (response.ok && data.data && data.data.length > 0) {
+                    return data.data[0].id;
+                }
+                return null;
+            } catch (error) {
+                updateTestStatus('getPatients', 'failure', {
+                    error: error.message
+                });
+                return null;
+            }
+        }
+        
+        async function testCreatePatient() {
+            try {
+                if (!userToken) {
+                    updateTestStatus('createPatient', 'failure', {
+                        error: 'No authentication token available'
+                    });
+                    return false;
+                }
+                
+                // Generate a unique email using timestamp
+                const timestamp = Date.now();
+                
+                const newPatient = {
+                    firstName: 'Test',
+                    lastName: `Patient-${timestamp}`,
+                    dateOfBirth: '1990-01-01',
+                    gender: 'Male',
+                    email: `test.patient.${timestamp}@example.com`,
+                    phone: '123-456-7890',
+                    address: '123 Test St, Test City, TS 12345',
+                    insuranceId: 'INS12345',
+                    medicalConditions: ['Hypertension', 'Diabetes'],
+                    allergies: ['Penicillin'],
+                    notes: 'Test patient created via API test script',
+                    createdBy: userToken
+                };
+                
+                const response = await fetch(`${BASE_URL}/patients`, {
+                    method: 'POST',
+                    headers: {
+                        'X-User-ID': userToken,
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(newPatient)
+                });
+                
+                const data = await response.json();
+                
+                updateTestStatus('createPatient', response.ok ? 'success' : 'failure', {
+                    status: response.status,
+                    data: data
+                });
+                
+                if (response.ok && data.id) {
+                    testPatientId = data.id;
+                    return data.id;
+                }
+                return null;
+            } catch (error) {
+                updateTestStatus('createPatient', 'failure', {
+                    error: error.message
+                });
+                return null;
+            }
+        }
+        
+        async function testDeletePatient() {
+            try {
+                if (!userToken || !testPatientId) {
+                    updateTestStatus('deletePatient', 'failure', {
+                        error: 'No authentication token or patient ID available'
+                    });
+                    return false;
+                }
+                
+                const response = await fetch(`${BASE_URL}/patients/${testPatientId}`, {
+                    method: 'DELETE',
+                    headers: {
+                        'X-User-ID': userToken
+                    }
+                });
+                
+                let data;
+                try {
+                    data = await response.json();
+                } catch (e) {
+                    data = { message: 'No JSON response' };
+                }
+                
+                updateTestStatus('deletePatient', response.ok ? 'success' : 'failure', {
+                    status: response.status,
+                    data: data
+                });
+                
+                return response.ok;
+            } catch (error) {
+                updateTestStatus('deletePatient', 'failure', {
+                    error: error.message
+                });
+                return false;
+            }
+        }
+        
+        // Run all tests
+        async function runAllTests() {
+            // Disable run button
+            document.getElementById('runAllTests').disabled = true;
+            
+            // Reset all test statuses
+            document.querySelectorAll('.test-status').forEach(el => {
+                el.className = 'test-status pending';
+                el.textContent = 'Pending';
+            });
+            
+            document.querySelectorAll('.response-container').forEach(el => {
+                el.style.display = 'none';
+                el.textContent = '';
+            });
+            
+            // Run tests sequentially
+            await testPublicEndpoint();
+            await testHealthCheck();
+            
+            const loginSuccess = await testLogin();
+            if (!loginSuccess) {
+                document.getElementById('runAllTests').disabled = false;
+                return;
+            }
+            
+            await testGetPatients();
+            const createSuccess = await testCreatePatient();
+            
+            if (createSuccess) {
+                await testDeletePatient();
+            }
+            
+            // Enable run button
+            document.getElementById('runAllTests').disabled = false;
+        }
+        
+        // Clear results
+        function clearResults() {
+            document.querySelectorAll('.test-status').forEach(el => {
+                el.className = 'test-status pending';
+                el.textContent = 'Pending';
+            });
+            
+            document.querySelectorAll('.response-container').forEach(el => {
+                el.style.display = 'none';
+                el.textContent = '';
+            });
+            
+            userToken = null;
+            testPatientId = null;
+        }
+        
+        // Event listeners
+        document.getElementById('runAllTests').addEventListener('click', runAllTests);
+        document.getElementById('clearResults').addEventListener('click', clearResults);
+    </script>
+</body>
+</html>
