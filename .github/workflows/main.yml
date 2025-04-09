@@ -1,69 +1,41 @@
-services:
-  # Patient Service (Python/Flask)
-  - type: web
-    name: hms-patient-service
-    env: python
-    plan: free
-    buildCommand: cd backend/patient-service && pip install -r requirements.txt
-    startCommand: cd backend/patient-service && python app.py
-    envVars:
-      - key: FLASK_ENV
-        value: production
-      - key: PORT
-        value: 8080
-      - key: DATABASE_URL
-        fromDatabase:
-          name: hms-db
-          property: connectionString
-      - key: S3_BUCKET
-        value: hms-patient-images
-      - key: S3_REGION
-        value: us-east-1
+name: Deploy HMS App
 
-  # API Gateway (Node.js)
-  - type: web
-    name: hms-api-gateway
-    env: node
-    plan: free
-    buildCommand: cd backend/api-gateway && npm install
-    startCommand: cd backend/api-gateway && npm start
-    envVars:
-      - key: NODE_ENV
-        value: production
-      - key: PORT
-        value: 3000
-      - key: PATIENT_SERVICE_HOST
-        fromService:
-          name: hms-patient-service
-          type: web
-          property: host
-      - key: PATIENT_SERVICE_PORT
-        fromService:
-          name: hms-patient-service
-          type: web
-          property: port
+on:
+  push:
+    branches:
+      - master
+  pull_request:
 
-  # Frontend (React)
-  - type: web
-    name: hms-frontend
-    env: static
-    buildCommand: cd frontend && npm install && npm run build
-    staticPublishPath: frontend/build
-    envVars:
-      - key: REACT_APP_API_GATEWAY_HOST
-        fromService:
-          name: hms-api-gateway
-          type: web
-          property: host
-      - key: REACT_APP_API_GATEWAY_PORT
-        fromService:
-          name: hms-api-gateway
-          type: web
-          property: port
+jobs:
+  build:
+    runs-on: ubuntu-latest
 
-# Database
-databases:
-  - name: hms-db
-    plan: free
-    databaseName: hms_production
-    user: hms_user
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v3
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: '18'
+
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.11'
+
+      - name: Install Python dependencies
+        run: |
+          cd backend/patient-service
+          pip install -r requirements.txt
+
+      - name: Install Node dependencies
+        run: |
+          cd backend/api-gateway
+          npm install
+
+      - name: Install Frontend and build
+        run: |
+          cd frontend
+          npm install
+          npm run build
