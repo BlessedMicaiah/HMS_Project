@@ -132,13 +132,21 @@ const PatientForm = () => {
     reader.readAsDataURL(file);
   };
 
-  const handleNextStep = () => {
+  const handleNextStep = (e?: React.MouseEvent) => {
+    if (e) {
+      e.preventDefault();
+    }
+    
     if (currentStep < totalSteps) {
       setCurrentStep(currentStep + 1);
     }
   };
 
-  const handlePrevStep = () => {
+  const handlePrevStep = (e?: React.MouseEvent) => {
+    if (e) {
+      e.preventDefault();
+    }
+    
     if (currentStep > 1) {
       setCurrentStep(currentStep - 1);
     }
@@ -202,7 +210,8 @@ const PatientForm = () => {
           await updatePatient(id, patientData);
         } else {
           console.log('Creating new patient');
-          await createPatient(patientData);
+          const result = await createPatient(patientData);
+          console.log('Patient created successfully:', result);
         }
         
         // Delay navigation slightly to show the saving animation
@@ -430,8 +439,8 @@ const PatientForm = () => {
     }
     else if (currentStep === 3) {
       return (
-        <div className="form-step" style={{ display: 'block', visibility: 'visible', opacity: 1 } as React.CSSProperties}>
-          <div className="step-content" style={{ display: 'block', visibility: 'visible' } as React.CSSProperties}>
+        <div className="form-step">
+          <div className="step-content">
             <Form.Group className="mb-3">
               <Form.Label>Insurance ID</Form.Label>
               <Form.Control
@@ -527,85 +536,22 @@ const PatientForm = () => {
             {renderStepIndicator()}
             
             <div style={{ minHeight: "400px" }}>
-              {/* Step 1: Basic Information */}
+              {/* Render form steps */}
               {currentStep === 1 && (
                 <div className="form-step">
-                  {/* Form content for step 1 */}
                   {renderFormStep()}
                 </div>
               )}
               
-              {/* Step 2: Contact Details */}
               {currentStep === 2 && (
                 <div className="form-step">
-                  {/* Form content for step 2 */}
                   {renderFormStep()}
                 </div>
               )}
               
-              {/* Step 3: Medical History (fixed to show properly) */}
               {currentStep === 3 && (
-                <div className="form-step" style={{ display: 'block' } as React.CSSProperties}>
-                  <div className="step-content">
-                    <Form.Group className="mb-3">
-                      <Form.Label>Insurance ID</Form.Label>
-                      <Form.Control
-                        type="text"
-                        name="insuranceId"
-                        value={formData.insuranceId || ''}
-                        onChange={handleChange}
-                        disabled={!canEditMedicalInfo}
-                      />
-                    </Form.Group>
-                    
-                    <Form.Group className="mb-3">
-                      <Form.Label>Medical Conditions</Form.Label>
-                      <Form.Control
-                        as="textarea"
-                        rows={3}
-                        name="medicalConditions"
-                        value={Array.isArray(formData.medicalConditions) 
-                          ? formData.medicalConditions.join(', ') 
-                          : formData.medicalConditions || ''}
-                        onChange={handleChange}
-                        disabled={!canEditMedicalInfo}
-                        placeholder="Enter medical conditions separated by commas (e.g., Diabetes, Hypertension, Asthma)"
-                      />
-                      <Form.Text className="text-muted">
-                        List all medical conditions separated by commas.
-                      </Form.Text>
-                    </Form.Group>
-                    
-                    <Form.Group className="mb-3">
-                      <Form.Label>Allergies</Form.Label>
-                      <Form.Control
-                        as="textarea"
-                        rows={3}
-                        name="allergies"
-                        value={Array.isArray(formData.allergies) 
-                          ? formData.allergies.join(', ') 
-                          : formData.allergies || ''}
-                        onChange={handleChange}
-                        disabled={!canEditMedicalInfo}
-                        placeholder="Enter allergies separated by commas (e.g., Penicillin, Peanuts, Shellfish)"
-                      />
-                      <Form.Text className="text-muted">
-                        List all allergies separated by commas.
-                      </Form.Text>
-                    </Form.Group>
-                    
-                    <Form.Group className="mb-3">
-                      <Form.Label>Notes</Form.Label>
-                      <Form.Control
-                        as="textarea"
-                        rows={3}
-                        name="notes"
-                        value={formData.notes || ''}
-                        onChange={handleChange}
-                        disabled={!canEditBasicInfo}
-                      />
-                    </Form.Group>
-                  </div>
+                <div className="form-step">
+                  {renderFormStep()}
                 </div>
               )}
             </div>
@@ -617,6 +563,7 @@ const PatientForm = () => {
                   onClick={handlePrevStep}
                   className="navigation-btn prev-btn"
                   disabled={loading}
+                  type="button"
                 >
                   <span className="btn-icon">⬅️</span> Previous
                 </Button>
@@ -626,6 +573,7 @@ const PatientForm = () => {
                   onClick={() => navigate('/patients')}
                   className="navigation-btn cancel-btn"
                   disabled={loading}
+                  type="button"
                 >
                   <span className="btn-icon">❌</span> Cancel
                 </Button>
@@ -637,6 +585,7 @@ const PatientForm = () => {
                   onClick={handleNextStep}
                   className="navigation-btn next-btn"
                   disabled={loading || !validateCurrentStep()}
+                  type="button"
                 >
                   Next <span className="btn-icon">➡️</span>
                 </Button>
