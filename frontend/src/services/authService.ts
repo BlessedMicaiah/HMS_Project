@@ -47,7 +47,7 @@ export const login = async (username: string, password: string): Promise<{ user:
   }
   
   // For production, use actual API
-  const response = await axios.post(`${API_URL}/auth/login`, { username, password });
+  const response = await axios.post(`${API_URL}/api/auth/login`, { username, password });
   
   // Store token in localStorage
   localStorage.setItem('token', response.data.token);
