@@ -379,6 +379,14 @@ def upload_base64_to_s3(base64_data, folder='patient-profiles'):
         print(f"Error uploading to S3: {str(e)}")
         return None
 
+# Add GraphQL endpoint
+@app.route('/graphql', methods=['GET', 'POST'])
+def graphql_server():
+    from flask_graphql import GraphQLView
+    from schema import schema
+    view = GraphQLView.as_view('graphql', schema=schema, graphiql=True)
+    return view()
+
 # API Endpoints
 @app.route('/api/patients', methods=['GET'])
 @authorize('read')

@@ -31,7 +31,13 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     // Check if user is already logged in
     const user = getCurrentUser();
     if (user) {
-      setCurrentUser(user);
+      // Ensure user has firstName, lastName, and role for navbar
+      setCurrentUser({
+        ...user,
+        firstName: user.firstName || 'Doctor',
+        lastName: user.lastName || '',
+        role: user.role || 'DOCTOR'
+      });
     }
     setLoading(false);
   }, []);
@@ -41,7 +47,13 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
       setLoading(true);
       setError(null);
       const { user } = await login(username, password);
-      setCurrentUser(user);
+      // Ensure user has firstName, lastName, and role for navbar
+      setCurrentUser({
+        ...user,
+        firstName: user.firstName || 'Doctor',
+        lastName: user.lastName || '',
+        role: user.role || 'DOCTOR'
+      });
     } catch (err) {
       setError('Invalid username or password');
       console.error(err);

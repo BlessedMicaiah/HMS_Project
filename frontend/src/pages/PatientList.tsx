@@ -186,8 +186,20 @@ const PatientList = () => {
                     <Card.Text className="mb-1">
                       <span className="text-muted me-2">📞</span> {patient?.phone || 'No phone'}
                     </Card.Text>
-                    <Card.Text className="mb-3">
+                    <Card.Text className="mb-1">
                       <span className="text-muted me-2">⚥</span> {patient?.gender || 'Unknown'}
+                    </Card.Text>
+                    <Card.Text className="mb-1">
+                      <span className="text-muted me-2">🏠</span> {patient?.address || 'No address'}
+                    </Card.Text>
+                    <Card.Text className="mb-1">
+                      <span className="text-muted me-2">🩺</span> Medical Conditions: {patient?.medicalConditions?.length ? patient.medicalConditions.join(', ') : 'None'}
+                    </Card.Text>
+                    <Card.Text className="mb-1">
+                      <span className="text-muted me-2">⚠️</span> Allergies: {patient?.allergies?.length ? patient.allergies.join(', ') : 'None'}
+                    </Card.Text>
+                    <Card.Text className="mb-1">
+                      <span className="text-muted me-2">📝</span> Notes: {patient?.notes || 'None'}
                     </Card.Text>
                   </div>
                   

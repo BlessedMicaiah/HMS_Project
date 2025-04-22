@@ -3,7 +3,7 @@ import { Patient } from '../types/patient';
 import { getCurrentUser, getToken } from './authService';
 
 // Use the correct API URL for our backend server
-const API_URL = 'http://localhost:3001/api/patients';
+const API_URL = process.env.REACT_APP_API_URL || 'http://localhost:3001/api/patients';
 
 // Pagination response interface
 export interface PaginatedResponse<T> {
@@ -47,33 +47,18 @@ export const getPatients = async (page: number = 1, perPage: number = 10): Promi
     return paginatedResponse;
   } catch (error) {
     console.error('Error fetching patients from API:', error);
-    
-    // Create a safe copy of the in-memory patients array
-    let filteredPatients = [...inMemoryPatients];
-    
-    // Filter patients based on user role
-    const currentUser = getCurrentUser();
-    if (currentUser && currentUser.role !== 'ADMIN' && filteredPatients.length > 0) {
-      // For non-admin users, only return patients they've created or are assigned to
-      filteredPatients = filteredPatients.filter((patient: Patient) => 
-        patient && patient.createdBy === currentUser.id
-      );
-    }
-    
-    // Create a fallback paginated response
-    const paginatedResponse: PaginatedResponse<Patient> = {
-      data: filteredPatients.slice((page - 1) * perPage, page * perPage),
+    // Instead of using inMemoryPatients, always return an empty array on error to avoid stale/mocked data
+    return {
+      data: [],
       pagination: {
-        total: filteredPatients.length,
+        total: 0,
         per_page: perPage,
         current_page: page,
-        total_pages: Math.max(1, Math.ceil(filteredPatients.length / perPage)),
-        has_next: page < Math.ceil(filteredPatients.length / perPage),
-        has_prev: page > 1
+        total_pages: 1,
+        has_next: false,
+        has_prev: false
       }
     };
-    
-    return paginatedResponse;
   }
 };
 

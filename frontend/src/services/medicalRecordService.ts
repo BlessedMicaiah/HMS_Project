@@ -64,37 +64,18 @@ export const getMedicalRecords = async (page: number = 1, perPage: number = 10, 
     return paginatedResponse;
   } catch (error) {
     console.error('Error fetching medical records:', error);
-    
-    // Use mock data if the API is unavailable
-    if (inMemoryRecords.length === 0) {
-      inMemoryRecords = mockRecords;
-    }
-    
-    // Filter records based on user role for mock data too
-    const currentUser = getCurrentUser();
-    if (currentUser && currentUser.role !== 'ADMIN') {
-      inMemoryRecords = inMemoryRecords.filter(record => record.doctorId === currentUser.id);
-    }
-    
-    // Filter by patient ID if provided
-    const filteredRecords = patientId 
-      ? inMemoryRecords.filter(r => r.patientId === patientId)
-      : inMemoryRecords;
-      
-    // Create a paginated response from our mock data
-    const paginatedResponse: PaginatedResponse<MedicalRecord> = {
-      data: filteredRecords.slice((page - 1) * perPage, page * perPage),
+    // Instead of using inMemoryRecords or mockRecords, always return an empty array on error
+    return {
+      data: [],
       pagination: {
-        total: filteredRecords.length,
+        total: 0,
         per_page: perPage,
         current_page: page,
-        total_pages: Math.ceil(filteredRecords.length / perPage) || 1,
-        has_next: page < Math.ceil(filteredRecords.length / perPage),
-        has_prev: page > 1
+        total_pages: 1,
+        has_next: false,
+        has_prev: false
       }
     };
-    
-    return paginatedResponse;
   }
 };
 

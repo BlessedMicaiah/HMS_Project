@@ -21,7 +21,7 @@ const Navbar = () => {
 
   return (
     <div className={`futuristic-navbar ${expanded ? 'expanded' : ''}`}>
-      <Container fluid className="navbar-container">
+      <Container fluid className="navbar-container" style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
         <div className="navbar-brand-container">
           <Link to="/" className="navbar-brand">
             <span className="brand-icon">⚕</span>
@@ -39,7 +39,7 @@ const Navbar = () => {
           </button>
         </div>
 
-        <div className={`navbar-links ${expanded ? 'show' : ''}`}>
+        <div className={`navbar-links ${expanded ? 'show' : ''}`} style={{ flex: 1, justifyContent: 'center', display: 'flex' }}>
           <div className="nav-item-container">
             <Link 
               to="/dashboard" 

@@ -64,37 +64,18 @@ export const getMedications = async (page: number = 1, perPage: number = 10, pat
     return paginatedResponse;
   } catch (error) {
     console.error('Error fetching medications:', error);
-    
-    // Use mock data if the API is unavailable
-    if (inMemoryMedications.length === 0) {
-      inMemoryMedications = mockMedications;
-    }
-    
-    // Filter medications based on user role for mock data too
-    const currentUser = getCurrentUser();
-    if (currentUser && currentUser.role !== 'ADMIN') {
-      inMemoryMedications = inMemoryMedications.filter(medication => medication.prescribedBy === currentUser.id);
-    }
-    
-    // Filter by patient ID if provided
-    const filteredMedications = patientId 
-      ? inMemoryMedications.filter(m => m.patientId === patientId)
-      : inMemoryMedications;
-      
-    // Create a paginated response from our mock data
-    const paginatedResponse: PaginatedResponse<Medication> = {
-      data: filteredMedications.slice((page - 1) * perPage, page * perPage),
+    // Instead of using inMemoryMedications or mockMedications, always return an empty array on error
+    return {
+      data: [],
       pagination: {
-        total: filteredMedications.length,
+        total: 0,
         per_page: perPage,
         current_page: page,
-        total_pages: Math.ceil(filteredMedications.length / perPage) || 1,
-        has_next: page < Math.ceil(filteredMedications.length / perPage),
-        has_prev: page > 1
+        total_pages: 1,
+        has_next: false,
+        has_prev: false
       }
     };
-    
-    return paginatedResponse;
   }
 };
 

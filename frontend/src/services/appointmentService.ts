@@ -64,36 +64,18 @@ export const getAppointments = async (page: number = 1, perPage: number = 10, da
     return paginatedResponse;
   } catch (error) {
     console.error('Error fetching appointments:', error);
-    
-    // Use mock data if the API is unavailable
-    if (inMemoryAppointments.length === 0) {
-      inMemoryAppointments = mockAppointments;
-    }
-    
-    // Filter appointments based on user role for mock data too
-    const currentUser = getCurrentUser();
-    if (currentUser && currentUser.role !== 'ADMIN') {
-      inMemoryAppointments = inMemoryAppointments.filter(appointment => appointment.doctorId === currentUser.id);
-    }
-    
-    // Create a paginated response from our mock data
-    const filteredAppointments = date 
-      ? inMemoryAppointments.filter(a => a.appointmentDate === date)
-      : inMemoryAppointments;
-      
-    const paginatedResponse: PaginatedResponse<Appointment> = {
-      data: filteredAppointments.slice((page - 1) * perPage, page * perPage),
+    // Instead of using inMemoryAppointments or mockAppointments, always return an empty array on error
+    return {
+      data: [],
       pagination: {
-        total: filteredAppointments.length,
+        total: 0,
         per_page: perPage,
         current_page: page,
-        total_pages: Math.ceil(filteredAppointments.length / perPage) || 1,
-        has_next: page < Math.ceil(filteredAppointments.length / perPage),
-        has_prev: page > 1
+        total_pages: 1,
+        has_next: false,
+        has_prev: false
       }
     };
-    
-    return paginatedResponse;
   }
 };
 
