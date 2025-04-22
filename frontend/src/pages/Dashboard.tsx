@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Card, Row, Col, Button, Badge, Spinner, Alert, ListGroup } from 'react-bootstrap';
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
-import { getPatients, PaginatedResponse } from '../services/patientService';
+import { getPatients } from '../services/patientService';
 import { getAppointments } from '../services/appointmentService';
 import { getMedications } from '../services/medicationService';
 import { getMedicalRecords } from '../services/medicalRecordService';

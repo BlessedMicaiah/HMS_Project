@@ -61,22 +61,22 @@ const PatientList = () => {
     setFilteredPatients(result);
   }, [patients, searchTerm, activeFilter]);
 
-  const handleDelete = async (id: string) => {
-    try {
-      if (window.confirm('Are you sure you want to delete this patient? This action cannot be undone.')) {
-        setDeleteConfirmation(id);
-        await deletePatient(id);
-        // Remove the patient from the local state
-        setPatients(prevPatients => prevPatients.filter(patient => patient.id !== id));
-        setFilteredPatients(prevPatients => prevPatients.filter(patient => patient.id !== id));
-        setDeleteConfirmation(null);
-      }
-    } catch (error) {
-      console.error('Error deleting patient:', error);
-      setError('Failed to delete patient. Please try again.');
-      setDeleteConfirmation(null);
-    }
-  };
+  // const handleDelete = async (id: string) => {
+  //   try {
+  //     if (window.confirm('Are you sure you want to delete this patient? This action cannot be undone.')) {
+  //       setDeleteConfirmation(id);
+  //       await deletePatient(id);
+  //       // Remove the patient from the local state
+  //       setPatients(prevPatients => prevPatients.filter(patient => patient.id !== id));
+  //       setFilteredPatients(prevPatients => prevPatients.filter(patient => patient.id !== id));
+  //       setDeleteConfirmation(null);
+  //     }
+  //   } catch (error) {
+  //     console.error('Error deleting patient:', error);
+  //     setError('Failed to delete patient. Please try again.');
+  //     setDeleteConfirmation(null);
+  //   }
+  // };
 
   if (loading) {
     return (

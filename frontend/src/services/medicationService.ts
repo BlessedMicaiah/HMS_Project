@@ -9,34 +9,34 @@ const API_URL = process.env.REACT_APP_API_URL || 'http://localhost:3001';
 let inMemoryMedications: Medication[] = [];
 
 // Sample mock data for offline use
-const mockMedications: Medication[] = [
-  {
-    id: 'mock-medication-1',
-    patientId: 'mock-patient-1',
-    name: 'Lisinopril',
-    dosage: '10mg',
-    frequency: 'Once daily',
-    startDate: '2025-03-01',
-    endDate: '2025-06-01',
-    prescribedBy: '2',
-    notes: 'Take with food in the morning',
-    createdAt: '2025-03-01T10:00:00Z',
-    updatedAt: '2025-03-01T10:00:00Z'
-  },
-  {
-    id: 'mock-medication-2',
-    patientId: 'mock-patient-2',
-    name: 'Metformin',
-    dosage: '500mg',
-    frequency: 'Twice daily',
-    startDate: '2025-02-15',
-    endDate: '2025-05-15',
-    prescribedBy: '2',
-    notes: 'Take with meals',
-    createdAt: '2025-02-15T14:30:00Z',
-    updatedAt: '2025-02-15T14:30:00Z'
-  }
-];
+// const mockMedications: Medication[] = [
+//   {
+//     id: 'mock-medication-1',
+//     patientId: 'mock-patient-1',
+//     name: 'Lisinopril',
+//     dosage: '10mg',
+//     frequency: 'Once daily',
+//     startDate: '2025-03-01',
+//     endDate: '2025-06-01',
+//     prescribedBy: '2',
+//     notes: 'Take with food in the morning',
+//     createdAt: '2025-03-01T10:00:00Z',
+//     updatedAt: '2025-03-01T10:00:00Z'
+//   },
+//   {
+//     id: 'mock-medication-2',
+//     patientId: 'mock-patient-2',
+//     name: 'Metformin',
+//     dosage: '500mg',
+//     frequency: 'Twice daily',
+//     startDate: '2025-02-15',
+//     endDate: '2025-05-15',
+//     prescribedBy: '2',
+//     notes: 'Take with meals',
+//     createdAt: '2025-02-15T14:30:00Z',
+//     updatedAt: '2025-02-15T14:30:00Z'
+//   }
+// ];
 
 export const getMedications = async (page: number = 1, perPage: number = 10, patientId?: string): Promise<PaginatedResponse<Medication>> => {
   try {

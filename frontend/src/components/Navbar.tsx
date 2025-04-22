@@ -4,11 +4,11 @@ import { Container } from 'react-bootstrap';
 import { useAuth } from '../context/AuthContext';
 import '../styles/FuturisticNavbar.css';
 
-interface User {
-  firstName?: string;
-  lastName?: string;
-  role?: string;
-}
+// interface User {
+//   firstName?: string;
+//   lastName?: string;
+//   role?: string;
+// }
 
 const Navbar = () => {
   const [expanded, setExpanded] = useState(false);

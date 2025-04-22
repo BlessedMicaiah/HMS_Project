@@ -9,34 +9,34 @@ const API_URL = process.env.REACT_APP_API_URL || 'http://localhost:3001';
 let inMemoryAppointments: Appointment[] = [];
 
 // Sample mock data for when API is unavailable
-const mockAppointments: Appointment[] = [
-  {
-    id: 'mock-appointment-1',
-    patientId: 'mock-patient-1',
-    doctorId: '2', // Match this with common test user IDs
-    appointmentDate: '2025-04-02',
-    startTime: '09:00',
-    endTime: '09:30',
-    status: 'SCHEDULED',
-    reason: 'Annual check-up',
-    notes: 'Patient has concerns about blood pressure',
-    createdAt: '2025-03-15T10:00:00Z',
-    updatedAt: '2025-03-15T10:00:00Z'
-  },
-  {
-    id: 'mock-appointment-2',
-    patientId: 'mock-patient-2',
-    doctorId: '2', // Match this with common test user IDs
-    appointmentDate: '2025-04-02',
-    startTime: '10:30',
-    endTime: '11:00',
-    status: 'SCHEDULED',
-    reason: 'Follow-up appointment',
-    notes: 'Review lab results',
-    createdAt: '2025-03-20T14:30:00Z',
-    updatedAt: '2025-03-20T14:30:00Z'
-  }
-];
+// const mockAppointments: Appointment[] = [
+//   {
+//     id: 'mock-appointment-1',
+//     patientId: 'mock-patient-1',
+//     doctorId: '2', // Match this with common test user IDs
+//     appointmentDate: '2025-04-02',
+//     startTime: '09:00',
+//     endTime: '09:30',
+//     status: 'SCHEDULED',
+//     reason: 'Annual check-up',
+//     notes: 'Patient has concerns about blood pressure',
+//     createdAt: '2025-03-15T10:00:00Z',
+//     updatedAt: '2025-03-15T10:00:00Z'
+//   },
+//   {
+//     id: 'mock-appointment-2',
+//     patientId: 'mock-patient-2',
+//     doctorId: '2', // Match this with common test user IDs
+//     appointmentDate: '2025-04-02',
+//     startTime: '10:30',
+//     endTime: '11:00',
+//     status: 'SCHEDULED',
+//     reason: 'Follow-up appointment',
+//     notes: 'Review lab results',
+//     createdAt: '2025-03-20T14:30:00Z',
+//     updatedAt: '2025-03-20T14:30:00Z'
+//   }
+// ];
 
 export const getAppointments = async (page: number = 1, perPage: number = 10, date?: string): Promise<PaginatedResponse<Appointment>> => {
   try {

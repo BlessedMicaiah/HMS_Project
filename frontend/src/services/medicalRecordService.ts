@@ -9,34 +9,34 @@ const API_URL = process.env.REACT_APP_API_URL || 'http://localhost:3001';
 let inMemoryRecords: MedicalRecord[] = [];
 
 // Sample mock data for offline use
-const mockRecords: MedicalRecord[] = [
-  {
-    id: 'mock-record-1',
-    patientId: 'mock-patient-1',
-    doctorId: '2',
-    visitDate: '2025-03-15',
-    chiefComplaint: 'Headache and dizziness',
-    diagnosis: 'Migraine',
-    treatmentPlan: 'Prescribed Sumatriptan and rest for 2 days',
-    followUpNeeded: true,
-    notes: 'Patient reports symptoms worsening over the past week',
-    createdAt: '2025-03-15T10:00:00Z',
-    updatedAt: '2025-03-15T10:00:00Z'
-  },
-  {
-    id: 'mock-record-2',
-    patientId: 'mock-patient-2',
-    doctorId: '2',
-    visitDate: '2025-03-20',
-    chiefComplaint: 'Sore throat and fever',
-    diagnosis: 'Strep throat',
-    treatmentPlan: 'Prescribed antibiotics for 10 days',
-    followUpNeeded: false,
-    notes: 'Patient allergic to penicillin, using alternative antibiotic',
-    createdAt: '2025-03-20T14:30:00Z',
-    updatedAt: '2025-03-20T14:30:00Z'
-  }
-];
+// const mockRecords: MedicalRecord[] = [
+//   {
+//     id: 'mock-record-1',
+//     patientId: 'mock-patient-1',
+//     doctorId: '2',
+//     visitDate: '2025-03-15',
+//     chiefComplaint: 'Headache and dizziness',
+//     diagnosis: 'Migraine',
+//     treatmentPlan: 'Prescribed Sumatriptan and rest for 2 days',
+//     followUpNeeded: true,
+//     notes: 'Patient reports symptoms worsening over the past week',
+//     createdAt: '2025-03-15T10:00:00Z',
+//     updatedAt: '2025-03-15T10:00:00Z'
+//   },
+//   {
+//     id: 'mock-record-2',
+//     patientId: 'mock-patient-2',
+//     doctorId: '2',
+//     visitDate: '2025-03-20',
+//     chiefComplaint: 'Sore throat and fever',
+//     diagnosis: 'Strep throat',
+//     treatmentPlan: 'Prescribed antibiotics for 10 days',
+//     followUpNeeded: false,
+//     notes: 'Patient allergic to penicillin, using alternative antibiotic',
+//     createdAt: '2025-03-20T14:30:00Z',
+//     updatedAt: '2025-03-20T14:30:00Z'
+//   }
+// ];
 
 export const getMedicalRecords = async (page: number = 1, perPage: number = 10, patientId?: string): Promise<PaginatedResponse<MedicalRecord>> => {
   try {

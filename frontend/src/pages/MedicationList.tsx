@@ -3,7 +3,7 @@ import { Link } from 'react-router-dom';
 import { Card, Button, Row, Col, Alert, Form, InputGroup, Pagination } from 'react-bootstrap';
 import { getMedications, deleteMedication } from '../services/medicationService';
 import { Medication } from '../types/medication';
-import { PaginatedResponse } from '../services/patientService';
+// import { PaginatedResponse } from '../services/patientService';
 
 const MedicationList = () => {
   const [medications, setMedications] = useState<Medication[]>([]);

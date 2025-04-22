@@ -3,7 +3,7 @@ import { Link } from 'react-router-dom';
 import { Card, Button, Row, Col, Alert, Form, InputGroup, Badge, Pagination } from 'react-bootstrap';
 import { getAppointments, deleteAppointment } from '../services/appointmentService';
 import { Appointment } from '../types/appointment';
-import { PaginatedResponse } from '../services/patientService';
+// import { PaginatedResponse } from '../services/patientService';
 
 const AppointmentList = () => {
   const [appointments, setAppointments] = useState<Appointment[]>([]);
@@ -16,7 +16,7 @@ const AppointmentList = () => {
   // Pagination state
   const [currentPage, setCurrentPage] = useState<number>(1);
   const [totalPages, setTotalPages] = useState<number>(1);
-  const [totalAppointments, setTotalAppointments] = useState<number>(0);
+  // const [totalAppointments, setTotalAppointments] = useState<number>(0);
   const [perPage, setPerPage] = useState<number>(10);
 
   const fetchAppointments = useCallback(async () => {
@@ -27,7 +27,7 @@ const AppointmentList = () => {
       setAppointments(response?.data || []);
       setFilteredAppointments(response?.data || []);
       setTotalPages(response?.pagination?.total_pages || 1);
-      setTotalAppointments(response?.pagination?.total || 0);
+      // setTotalAppointments(response?.pagination?.total || 0);
       setError(null);
     } catch (err) {
       console.error('Error fetching appointments:', err);
