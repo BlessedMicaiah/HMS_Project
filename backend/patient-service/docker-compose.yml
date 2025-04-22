@@ -21,7 +21,7 @@ services:
     ports:
       - "3001:3001"
     environment:
-      - DATABASE_URL=postgresql://postgres:postgres@postgres:5432/patient_service
+      - DATABASE_URL=postgresql://hms_user:oy5MAJDkrzcTB8zNJ1iPzL4AfbjESIW9@dpg-cvqphsndiees739neijg-a:5432/hms_production_1047
       - FLASK_APP=app.py
       - FLASK_DEBUG=1
       - PORT=3001
