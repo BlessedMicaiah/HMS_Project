@@ -1,17 +1,16 @@
-import base64
-from datetime import datetime
-import json
-import logging
-import math
 import os
-import uuid
-
-import boto3
 from flask import Flask, jsonify, request
-from flask_cors import CORS
-from flask_migrate import Migrate
 from flask_sqlalchemy import SQLAlchemy
+from flask_migrate import Migrate
+from flask_cors import CORS
+from datetime import datetime
+import uuid
+import boto3
 from werkzeug.utils import secure_filename
+import base64
+import json
+import math
+import logging
 
 # Initialize Flask app
 app = Flask(__name__)
@@ -1360,23 +1359,3 @@ if __name__ == '__main__':
     # Run the Flask app
     port = int(os.environ.get('PORT', 3001))
     app.run(host='0.0.0.0', port=port, debug=True)
-
-
-    # Test the database connection
-@app.route('/api/db-test', methods=['GET'])
-def test_db_connection():
-    try:
-        # Attempt to make a simple database query
-        result = db.session.execute(db.select(User).limit(1)).first()
-        return jsonify({
-            "status": "success",
-            "message": "Database connection successful",
-            "database_type": db.engine.name,
-            "result": f"Found user: {result[0].username}" if result else "No users found"
-        }), 200
-    except Exception as e:
-        return jsonify({
-            "status": "error",
-            "message": "Database connection failed",
-            "error": str(e)
-        }), 500
