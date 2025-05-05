@@ -17,7 +17,7 @@ def apply_cors_fix():
     
     if cors_line_index != -1:
         # Replace existing CORS line with new configuration
-        content[cors_line_index] = "CORS(app, origins=['http://localhost:3000', 'http://localhost:3002', 'http://localhost:3006'], supports_credentials=True, allow_headers=['Content-Type', 'X-User-ID', 'Authorization'])\n"
+        content[cors_line_index] = "CORS(app, origins=['http://localhost:3000', 'http://localhost:3002', 'http://localhost:3006', 'https://hms-frontend-pd89.onrender.com', 'https://hms-api-gateway.onrender.com', 'https://hms-patient-service-vq8x.onrender.com'], supports_credentials=True, allow_headers=['Content-Type', 'X-User-ID', 'Authorization'])\n"
     
     # Write the updated content back to app.py
     with open('app.py', 'w') as file:

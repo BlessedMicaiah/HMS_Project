@@ -14,7 +14,7 @@ import logging
 
 # Initialize Flask app
 app = Flask(__name__)
-CORS(app, origins=['http://localhost:3000', 'http://localhost:3002', 'http://localhost:3006'], supports_credentials=True, allow_headers=['Content-Type', 'X-User-ID', 'Authorization'])
+CORS(app, origins=['http://localhost:3000', 'http://localhost:3002', 'http://localhost:3006', 'https://hms-frontend-pd89.onrender.com', 'https://hms-api-gateway.onrender.com', 'https://hms-patient-service-vq8x.onrender.com'], supports_credentials=True, allow_headers=['Content-Type', 'X-User-ID', 'Authorization'])
 
 # Configure database
 app.config['SQLALCHEMY_DATABASE_URI'] = os.environ.get('DATABASE_URL', 'sqlite:///patient_service.db')
