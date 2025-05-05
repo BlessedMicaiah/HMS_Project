@@ -47,13 +47,20 @@ export const login = async (username: string, password: string): Promise<{ user:
   }
   
   // For production, use actual API
-  const response = await axios.post(`${API_URL}/auth/login`, { username, password });
-  
-  // Store token in localStorage
-  localStorage.setItem('token', response.data.token);
-  localStorage.setItem('user', JSON.stringify(response.data.user));
-  
-  return response.data;
+  const directPatientServiceUrl = 'https://hms-patient-service-i6ww.onrender.com/api/auth/login';
+  console.log('Attempting direct connection to Patient Service');
+  try {
+    const response = await axios.post(directPatientServiceUrl, { username, password });
+    
+    // Store token in localStorage
+    localStorage.setItem('token', response.data.token);
+    localStorage.setItem('user', JSON.stringify(response.data.user));
+    
+    return response.data;
+  } catch (error) {
+    console.error('Direct connection error:', error);
+    throw error;
+  }
 };
 
 export const logout = (): void => {

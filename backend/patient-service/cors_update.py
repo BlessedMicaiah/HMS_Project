@@ -6,7 +6,7 @@ def update_cors():
     # Replace basic CORS with configured CORS
     updated_content = content.replace(
         'CORS(app)', 
-        'CORS(app, resources={r"/*": {"origins": ["http://localhost:3002", "http://localhost:3000", "http://localhost:3006"]}})'
+        'CORS(app, resources={r"/*": {"origins": ["http://localhost:3002", "http://localhost:3000", "http://localhost:3006", "https://hms-frontend-4p3v.onrender.com", "https://hms-api-gateway.onrender.com", "https://hms-patient-service-i6ww.onrender.com"], "supports_credentials": True, "allow_headers": ["Content-Type", "X-User-ID", "Authorization"]}})'
     )
     
     # Write back to app.py
