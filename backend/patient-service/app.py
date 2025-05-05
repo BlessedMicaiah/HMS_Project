@@ -14,7 +14,7 @@ import logging
 
 # Initialize Flask app
 app = Flask(__name__)
-CORS(app)
+CORS(app, origins=['http://localhost:3000', 'http://localhost:3002', 'http://localhost:3006'], supports_credentials=True, allow_headers=['Content-Type', 'X-User-ID', 'Authorization'])
 
 # Configure database
 app.config['SQLALCHEMY_DATABASE_URI'] = os.environ.get('DATABASE_URL', 'sqlite:///patient_service.db')
@@ -404,8 +404,10 @@ def get_all_patients():
     # Get paginated patients
     patients = Patient.query.order_by(Patient.lastName.asc(), Patient.firstName.asc())
     
-    # Filter by user if not admin
-    if request.user and request.user.role != 'ADMIN':
+    # Filter by user role:
+    # - ADMIN, DOCTOR, NURSE, RECEPTIONIST can see all patients
+    # - PATIENT role users can only see their own records
+    if request.user and request.user.role == 'PATIENT':
         patients = patients.filter_by(createdBy=request.user.id)
     
     # Apply pagination

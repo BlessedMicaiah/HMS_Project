@@ -37,7 +37,7 @@ export const getPatients = async (page: number = 1, perPage: number = 10): Promi
     
     // Filter patients based on user role
     const currentUser = getCurrentUser();
-    if (currentUser && currentUser.role !== 'ADMIN' && Array.isArray(paginatedResponse.data)) {
+    if (currentUser && currentUser.role === 'PATIENT' && Array.isArray(paginatedResponse.data)) {
       // For non-admin users, only return patients they've created or are assigned to
       paginatedResponse.data = paginatedResponse.data.filter((patient: Patient) => 
         patient && patient.createdBy === currentUser.id
