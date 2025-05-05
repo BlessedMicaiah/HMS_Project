@@ -48,15 +48,32 @@ export const login = async (username: string, password: string): Promise<{ user:
   
   // For production, use actual API
   try {
-    const response = await axios.post(`${API_URL}/auth/login`, { username, password });
-    
-    // Store token in localStorage
-    localStorage.setItem('token', response.data.token);
-    localStorage.setItem('user', JSON.stringify(response.data.user));
-    
-    return response.data;
+    console.log('Attempting to login via API Gateway');
+    // First try with API Gateway
+    try {
+      const response = await axios.post(`${API_URL}/auth/login`, { username, password });
+      console.log('API Gateway login successful');
+      // Store token in localStorage
+      localStorage.setItem('token', response.data.token);
+      localStorage.setItem('user', JSON.stringify(response.data.user));
+      return response.data;
+    } catch (gatewayError) {
+      console.error('API Gateway login failed:', gatewayError);
+      
+      // If API Gateway fails, try direct connection
+      console.log('Attempting direct connection to Patient Service');
+      const directResponse = await axios.post('https://hms-patient-service-i6ww.onrender.com/api/auth/login', { 
+        username, 
+        password 
+      });
+      console.log('Direct connection login successful');
+      // Store token in localStorage
+      localStorage.setItem('token', directResponse.data.token);
+      localStorage.setItem('user', JSON.stringify(directResponse.data.user));
+      return directResponse.data;
+    }
   } catch (error) {
-    console.error('API connection error:', error);
+    console.error('All login attempts failed:', error);
     throw error;
   }
 };
