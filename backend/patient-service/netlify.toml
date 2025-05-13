@@ -1,0 +1,15 @@
+[build]
+  base = "."
+  publish = "."
+  command = "pip install -r requirements.txt"
+
+[build.environment]
+  PYTHON_VERSION = "3.11"
+  FLASK_ENV = "production"
+  CORS_ALLOW_ALL = "true"
+  USE_SWAGGER = "true"
+
+[[redirects]]
+  from = "/*"
+  to = "/.netlify/functions/api"
+  status = 200

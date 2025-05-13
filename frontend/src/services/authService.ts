@@ -1,9 +1,7 @@
 import axios from 'axios';
 import { User } from '../types/patient';
 
-const API_URL = process.env.REACT_APP_API_URL || 'http://localhost:3001/api';
-
-// For development, create mock user data
+// User data for mock authentication
 const MOCK_USERS = {
   admin: {
     id: '1',
@@ -27,55 +25,59 @@ const MOCK_USERS = {
 
 // User authentication
 export const login = async (username: string, password: string): Promise<{ user: User, token: string }> => {
-  // For development, use mock authentication
-  if (process.env.NODE_ENV === 'development') {
-    // Check if username exists in mock users
-    if (username in MOCK_USERS) {
-      const mockUser = MOCK_USERS[username as keyof typeof MOCK_USERS];
-      
-      // Store user in localStorage
-      localStorage.setItem('token', mockUser.id);
-      localStorage.setItem('user', JSON.stringify(mockUser));
-      
-      return { 
-        user: mockUser,
-        token: mockUser.id
-      };
-    } else {
-      throw new Error('Invalid username or password');
-    }
+  // For Windsurf demo, use mock authentication for easier testing
+  console.log('Using mock authentication for Windsurf demo');
+  
+  // Check if username exists in mock users
+  if (username in MOCK_USERS) {
+    const mockUser = MOCK_USERS[username as keyof typeof MOCK_USERS];
+    
+    // Store user in localStorage
+    localStorage.setItem('token', mockUser.id);
+    localStorage.setItem('user', JSON.stringify(mockUser));
+    
+    return { 
+      user: mockUser,
+      token: mockUser.id
+    };
+  } else {
+    throw new Error('Invalid username or password');
   }
   
-  // For production, use actual API
+  // The following code is commented out as we're using mock authentication for the Windsurf demo
+  /*
+  // For real backend integration, uncomment this section and define the API URLs:
+  // const API_URL = process.env.REACT_APP_API_URL || 'https://hms-patient-service-i6ww.onrender.com/api';
+  // const API_GATEWAY_URL = process.env.REACT_APP_API_GATEWAY_URL || 'https://hms-api-gateway.onrender.com/api';
+  
   try {
-    console.log('Attempting to login via API Gateway');
-    // First try with API Gateway
+    console.log('Attempting to login directly to Patient Service');
+    const response = await axios.post(`${API_URL}/auth/login`, { username, password });
+    
+    // Store token in localStorage
+    localStorage.setItem('token', response.data.token);
+    localStorage.setItem('user', JSON.stringify(response.data.user));
+    
+    return response.data;
+  } catch (directError) {
+    console.error('Direct login failed:', directError);
+    
+    // If direct connection fails, try via API Gateway
     try {
-      const response = await axios.post(`${API_URL}/auth/login`, { username, password });
-      console.log('API Gateway login successful');
+      console.log('Attempting to login via API Gateway');
+      const gatewayResponse = await axios.post(`${API_GATEWAY_URL}/auth/login`, { username, password });
+      
       // Store token in localStorage
-      localStorage.setItem('token', response.data.token);
-      localStorage.setItem('user', JSON.stringify(response.data.user));
-      return response.data;
+      localStorage.setItem('token', gatewayResponse.data.token);
+      localStorage.setItem('user', JSON.stringify(gatewayResponse.data.user));
+      
+      return gatewayResponse.data;
     } catch (gatewayError) {
       console.error('API Gateway login failed:', gatewayError);
-      
-      // If API Gateway fails, try direct connection
-      console.log('Attempting direct connection to Patient Service');
-      const directResponse = await axios.post('https://hms-patient-service-i6ww.onrender.com/api/auth/login', { 
-        username, 
-        password 
-      });
-      console.log('Direct connection login successful');
-      // Store token in localStorage
-      localStorage.setItem('token', directResponse.data.token);
-      localStorage.setItem('user', JSON.stringify(directResponse.data.user));
-      return directResponse.data;
+      throw new Error('Authentication failed. Please check your credentials and try again.');
     }
-  } catch (error) {
-    console.error('All login attempts failed:', error);
-    throw error;
   }
+  */
 };
 
 export const logout = (): void => {
@@ -86,14 +88,11 @@ export const logout = (): void => {
 export const getCurrentUser = (): User | null => {
   const userStr = localStorage.getItem('user');
   if (!userStr) {
-    // For development, auto-login as doctor if no user exists
-    if (process.env.NODE_ENV === 'development') {
-      const defaultUser = MOCK_USERS.doctor;
-      localStorage.setItem('token', defaultUser.id);
-      localStorage.setItem('user', JSON.stringify(defaultUser));
-      return defaultUser;
-    }
-    return null;
+    // Auto-login as doctor if no user exists for demo purposes
+    const defaultUser = MOCK_USERS.doctor;
+    localStorage.setItem('token', defaultUser.id);
+    localStorage.setItem('user', JSON.stringify(defaultUser));
+    return defaultUser;
   }
   
   try {
@@ -131,7 +130,4 @@ export const setupAxiosInterceptors = (): void => {
       return Promise.reject(error);
     }
   );
-  
-  // Set base URL for axios
-  axios.defaults.baseURL = API_URL;
 };

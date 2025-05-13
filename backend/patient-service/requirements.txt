@@ -12,4 +12,5 @@ graphene-sqlalchemy==2.3.0
 flask-graphql==2.0.1
 Flask-SQLAlchemy==2.5.1
 SQLAlchemy==1.4.49
+flask-restx==1.1.0
 
